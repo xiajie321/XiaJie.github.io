@@ -218,14 +218,9 @@
       </div>
 
       <!-- 右侧侧边栏：TOC 和 最近更新 -->
-      <aside 
-        ref="tocContainer"
-        class="hidden lg:block w-72 shrink-0 space-y-6 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar p-4"
-        @mouseenter="isTocHovered = true"
-        @mouseleave="isTocHovered = false"
-      >
-        <!-- 快速跳转评论区 (独立块，仅在有内容时显示) -->
-        <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
+      <aside class="hidden lg:flex flex-col w-72 shrink-0 sticky top-24 max-h-[calc(100vh-8rem)] gap-4 p-4">
+        <!-- 快速跳转评论区 (独立块，固定在顶部) -->
+        <div v-if="blogStore.currentToc.length > 0" class="shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
           <a 
             href="#comments-section"
             class="block transition-colors text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-pixel-secondary flex items-center justify-center gap-2"
@@ -236,54 +231,62 @@
           </a>
         </div>
 
-        <!-- 文章目录 (仅当有 currentToc 时显示) -->
-        <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
-          <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
-            <span class="text-pixel-primary">📑</span> 目录
-          </h3>
-          <ul class="space-y-2 text-sm">
-            <li 
-              v-for="item in blogStore.currentToc" 
-              :key="item.id"
-              :class="{'pl-4': item.level > 2, 'pl-8': item.level > 3}"
-            >
-              <a 
-                :href="'#' + item.id" 
-                class="block transition-colors truncate border-l-2 pl-2 py-1"
-                :class="[
-                  blogStore.activeHeadingId === item.id 
-                    ? 'border-pixel-primary text-pixel-primary font-bold bg-pixel-primary/10' 
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-pixel-primary dark:hover:text-pixel-primary hover:border-gray-300'
-                ]"
-                @click.prevent="scrollToHeading(item.id)"
+        <!-- 滚动区域：包含目录和最近更新 -->
+        <div 
+          ref="tocContainer"
+          class="flex-grow overflow-y-auto custom-scrollbar space-y-4 pr-1"
+          @mouseenter="isTocHovered = true"
+          @mouseleave="isTocHovered = false"
+        >
+          <!-- 文章目录 (仅当有 currentToc 时显示) -->
+          <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
+            <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+              <span class="text-pixel-primary">📑</span> 目录
+            </h3>
+            <ul class="space-y-2 text-sm">
+              <li 
+                v-for="item in blogStore.currentToc" 
+                :key="item.id"
+                :class="{'pl-4': item.level > 2, 'pl-8': item.level > 3}"
               >
-                {{ item.text }}
-              </a>
-            </li>
-          </ul>
-        </div>
+                <a 
+                  :href="'#' + item.id" 
+                  class="block transition-colors truncate border-l-2 pl-2 py-1"
+                  :class="[
+                    blogStore.activeHeadingId === item.id 
+                      ? 'border-pixel-primary text-pixel-primary font-bold bg-pixel-primary/10' 
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-pixel-primary dark:hover:text-pixel-primary hover:border-gray-300'
+                  ]"
+                  @click.prevent="scrollToHeading(item.id)"
+                >
+                  {{ item.text }}
+                </a>
+              </li>
+            </ul>
+          </div>
 
-        <!-- 最近更新 (始终显示) -->
-        <div class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
-          <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
-            <span class="text-pixel-primary">★</span> 最近更新
-          </h3>
-          <ul class="space-y-3">
-            <li v-for="article in blogStore.recentArticles" :key="article.path">
-              <router-link 
-                :to="{ path: getArticleLink(article), query: { path: article.path } }"
-                class="group block hover:translate-x-1 transition-transform"
-              >
-                <div class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-pixel-primary transition-colors truncate">
-                  {{ article.title || '无标题' }}
-                </div>
-                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-pixel mt-1 flex justify-between">
-                  <span>{{ formatDate(article.date) }}</span>
-                  <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded transition-colors">{{ article.category }}</span>
-                </div>
-              </router-link>
-            </li>
-          </ul>
+          <!-- 最近更新 (始终显示) -->
+          <div class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
+            <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+              <span class="text-pixel-primary">★</span> 最近更新
+            </h3>
+            <ul class="space-y-3">
+              <li v-for="article in blogStore.recentArticles" :key="article.path">
+                <router-link 
+                  :to="{ path: getArticleLink(article), query: { path: article.path } }"
+                  class="group block hover:translate-x-1 transition-transform"
+                >
+                  <div class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-pixel-primary transition-colors truncate">
+                    {{ article.title || '无标题' }}
+                  </div>
+                  <div class="text-[10px] text-gray-500 dark:text-gray-400 font-pixel mt-1 flex justify-between">
+                    <span>{{ formatDate(article.date) }}</span>
+                    <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded transition-colors">{{ article.category }}</span>
+                  </div>
+                </router-link>
+              </li>
+            </ul>
+          </div>
         </div>
       </aside>
     </main>
