@@ -40,10 +40,10 @@
             <button
               v-for="tag in availableTags"
               :key="tag"
-              @click="selectedTag = selectedTag === tag ? null : tag"
+              @click="toggleTag(tag)"
               class="px-3 py-1 text-xs rounded-full transition-all duration-200 pixel-border-sm"
               :class="[
-                selectedTag === tag 
+                selectedTags.has(tag) 
                   ? 'bg-pixel-primary text-white scale-105' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               ]"
@@ -164,7 +164,11 @@
           ← {{ currentConfig?.type === 'home' ? '返回首页' : '返回列表' }}
         </button>
 
-        <div class="markdown-body bg-white/50 dark:bg-gray-900/50 p-4 rounded-lg" v-html="renderedContent"></div>
+        <div 
+          class="markdown-body bg-white/50 dark:bg-gray-900/50 p-4 rounded-lg" 
+          v-html="renderedContent"
+          @dblclick="handleImageDblClick"
+        ></div>
 
         <!-- 评论组件 -->
         <Comment 
@@ -174,6 +178,42 @@
       </div>
 
     </transition>
+
+    <!-- 图片预览 Lightbox -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div 
+          v-if="previewImage" 
+          class="fixed inset-0 z-[10000] bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
+          @click="previewImage = null"
+        >
+          <div class="relative max-w-full max-h-[85vh] flex-shrink-0" @click.stop>
+            <img 
+              :src="previewImage" 
+              class="max-w-full max-h-[85vh] object-contain pixel-border-sm shadow-2xl animate-pop-up bg-white"
+              alt="Preview" 
+            />
+            
+            <!-- 退出按钮：贴在图片右上角 -->
+            <button 
+              class="absolute -top-4 -right-4 w-10 h-10 bg-pixel-primary text-white rounded-full flex items-center justify-center pixel-border-sm hover:scale-110 transition-transform shadow-lg z-20 cursor-pointer hover:bg-red-500"
+              @click.stop="previewImage = null"
+              title="关闭预览"
+            >
+              <span class="text-xl font-bold mb-1">×</span>
+            </button>
+          </div>
+
+          <!-- 下载按钮：在图片正下方 -->
+          <button 
+            class="mt-6 bg-white text-black px-6 py-2 rounded-full pixel-border-sm hover:bg-pixel-secondary transition-colors flex items-center gap-2 font-bold shadow-lg hover:scale-105 active:scale-95 z-20 flex-shrink-0"
+            @click.stop="downloadImage(previewImage)"
+          >
+            <span>⬇️</span> 下载图片
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
 
   </div>
   
@@ -199,9 +239,30 @@ const blogStore = useBlogStore()
 const selectedArticle = ref(null)
 const toc = ref([])
 const isTocOpen = ref(false)
-const selectedTag = ref(null)
+const selectedTags = ref(new Set())
 const selectedModule = ref(null)
 const visibleCount = ref(10) // 初始显示数量
+const previewImage = ref(null)
+const listScrollTop = ref(0)
+
+// 图片双击处理
+const handleImageDblClick = (e) => {
+  if (e.target.tagName === 'IMG') {
+    previewImage.value = e.target.src
+    playSound('click')
+  }
+}
+
+// 下载图片
+const downloadImage = (url) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `image-${Date.now()}`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  playSound('click')
+}
 
 // 获取当前栏目配置
 const currentConfig = computed(() => {
@@ -252,15 +313,30 @@ const currentArticles = computed(() => {
     articles = articles.filter(article => article.module === selectedModule.value)
   }
   
-  // 标签筛选
-  if (selectedTag.value) {
-    articles = articles.filter(article => 
-      Array.isArray(article.tags) && article.tags.includes(selectedTag.value)
-    )
+  // 标签筛选 (多选 AND 逻辑)
+  if (selectedTags.value.size > 0) {
+    articles = articles.filter(article => {
+      if (!Array.isArray(article.tags)) return false
+      // 检查文章是否包含所有选中的标签
+      for (const tag of selectedTags.value) {
+        if (!article.tags.includes(tag)) return false
+      }
+      return true
+    })
   }
   
   return articles
 })
+
+const toggleTag = (tag) => {
+  const newSet = new Set(selectedTags.value)
+  if (newSet.has(tag)) {
+    newSet.delete(tag)
+  } else {
+    newSet.add(tag)
+  }
+  selectedTags.value = newSet
+}
 
 // 分页显示的列表
 const displayedArticles = computed(() => {
@@ -268,18 +344,15 @@ const displayedArticles = computed(() => {
 })
 
 // 监听筛选条件变化，重置显示数量
-watch([selectedModule, selectedTag, () => route.params.category], () => {
+watch([selectedModule, selectedTags], () => {
   visibleCount.value = 10
-  if (route.params.category) {
-    // 只有在切换栏目时才完全重置筛选器，如果是同栏目下筛选则保留
-    // 但上面的 watch 已经处理了 route.params.category 的筛选器重置
-  }
 })
 
 // 监听路由变化，切换栏目时重置筛选
 watch(() => route.params.category, () => {
-  selectedTag.value = null
+  selectedTags.value = new Set()
   selectedModule.value = null
+  listScrollTop.value = 0
   visibleCount.value = 10
 })
 
@@ -316,9 +389,13 @@ class Slugger {
   }
 }
 
+// 导入所有图片资源
+const imagesGlob = import.meta.glob('../Root/**/*.{png,jpg,jpeg,gif,webp,svg}', { eager: true, query: '?url', import: 'default' })
+
 // 自定义 Renderer 以支持视频和 TOC
 const renderer = new marked.Renderer()
 const originalLink = renderer.link.bind(renderer)
+const originalImage = renderer.image.bind(renderer)
 
 // 临时 TOC 存储
 let tempToc = []
@@ -391,6 +468,52 @@ renderer.link = (href, title, text) => {
   }
 
   return originalLink(href, title, text)
+}
+
+// 处理图片路径
+renderer.image = (href, title, text) => {
+  if (!href) return originalImage(href, title, text)
+
+  // 如果是网络图片，直接返回
+  if (href.startsWith('http') || href.startsWith('//')) {
+    return originalImage(href, title, text)
+  }
+
+  // 如果是绝对路径，使用 resolvePath 处理 Base URL
+  if (href.startsWith('/')) {
+    return originalImage(resolvePath(href), title, text)
+  }
+
+  // 尝试解析相对路径
+  const articlePath = selectedArticle.value?.path
+  if (articlePath) {
+    try {
+      // 获取文章所在目录
+      const articleDir = articlePath.substring(0, articlePath.lastIndexOf('/'))
+      
+      // 解析相对路径
+      // 简单处理 ./ 和直接文件名
+      let targetPath = href
+      if (targetPath.startsWith('./')) {
+        targetPath = targetPath.substring(2)
+      }
+      
+      // 拼接完整路径
+      // 注意：这里假设没有使用 ../ 跳出当前目录，如果需要支持 ../ 需要更复杂的解析
+      const fullPath = `${articleDir}/${targetPath}`
+      
+      // 在 glob 结果中查找
+      const resolvedUrl = imagesGlob[fullPath]
+      
+      if (resolvedUrl) {
+        return originalImage(resolvedUrl, title, text)
+      }
+    } catch (e) {
+      console.warn('Image path resolution failed:', e)
+    }
+  }
+
+  return originalImage(href, title, text)
 }
 
 const renderedContent = ref('')
@@ -517,10 +640,17 @@ watch(() => route.query.path, (newPath) => {
     }
   } else {
     selectedArticle.value = null
+    // 恢复列表滚动位置
+    nextTick(() => {
+      window.scrollTo({ top: listScrollTop.value, behavior: 'auto' })
+    })
   }
 }, { immediate: true })
 
 const selectArticle = (article) => {
+  // 保存当前滚动位置
+  listScrollTop.value = window.scrollY
+  
   playSound('click')
   selectedArticle.value = article
   isTocOpen.value = false // 默认关闭 TOC
@@ -537,6 +667,7 @@ const goBack = () => {
   const query = { ...route.query }
   delete query.path
   router.push({ query })
+  // 滚动恢复由 watch 路由变化处理
 }
 
 const scrollToHeading = (id) => {

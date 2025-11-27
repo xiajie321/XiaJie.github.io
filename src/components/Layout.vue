@@ -212,13 +212,18 @@
         
         <router-view v-slot="{ Component, route }">
           <transition name="page" mode="out-in">
-            <component :is="Component" :key="route.fullPath" />
+            <component :is="Component" :key="route.path" />
           </transition>
         </router-view>
       </div>
 
       <!-- 右侧侧边栏：TOC 和 最近更新 -->
-      <aside class="hidden lg:block w-72 shrink-0 space-y-6 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar p-4">
+      <aside 
+        ref="tocContainer"
+        class="hidden lg:block w-72 shrink-0 space-y-6 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar p-4"
+        @mouseenter="isTocHovered = true"
+        @mouseleave="isTocHovered = false"
+      >
         <!-- 文章目录 (仅当有 currentToc 时显示) -->
         <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
           <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -383,7 +388,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed, ref, onUnmounted } from 'vue'
+import { onMounted, computed, ref, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBlogStore } from '../stores/blog'
 import { format } from 'date-fns'
@@ -399,6 +404,23 @@ const particleContainer = ref(null)
 const showStartOverlay = ref(false) // 初始不显示，等待加载完成后显示
 const isFakeLoading = ref(true)
 const loadingProgress = ref(0)
+const tocContainer = ref(null)
+const isTocHovered = ref(false)
+
+// 监听活动标题变化，自动滚动 TOC
+watch(() => blogStore.activeHeadingId, (newId) => {
+  if (!newId || isTocHovered.value || !tocContainer.value) return
+
+  // 找到对应的链接元素
+  const activeLink = tocContainer.value.querySelector(`a[href="#${newId}"]`)
+  
+  if (activeLink) {
+    activeLink.scrollIntoView({
+      block: 'nearest',
+      behavior: 'smooth'
+    })
+  }
+})
 
 const startGame = () => {
   showStartOverlay.value = false

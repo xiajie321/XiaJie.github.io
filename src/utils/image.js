@@ -32,3 +32,20 @@ export const resolvePath = (path) => {
   // 拼接
   return `${baseUrl}${path}`
 }
+
+/**
+ * 获取资源完整 URL (包含 base)
+ * 优先处理 public 目录下的静态资源
+ */
+export const getAssetUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  
+  // 移除开头的 ./
+  if (path.startsWith('./')) path = path.slice(2)
+  
+  // 确保以 / 开头
+  if (!path.startsWith('/')) path = '/' + path
+  
+  return resolvePath(path)
+}

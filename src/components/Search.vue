@@ -52,7 +52,9 @@
     </div>
     
     <!-- 点击外部关闭遮罩 -->
-    <div v-if="isOpen" @click="closeSearch" class="fixed inset-0 z-40 bg-black/5 cursor-default"></div>
+    <Teleport to="body">
+      <div v-if="isOpen" @click="closeSearch" class="fixed inset-0 z-40 bg-black/5 cursor-default"></div>
+    </Teleport>
   </div>
 </template>
 
@@ -99,6 +101,9 @@ const filteredArticles = computed(() => {
 })
 
 const handleSelect = (article) => {
+  // 立即关闭搜索框，提供更好的交互反馈
+  closeSearch()
+
   // 导航到对应的分类页面，并带上 path 参数以选中文章
   // article.category 是目录名，如 'Home', 'Articles'
   // 我们的路由是 '/' (Home) 和 '/:category'
@@ -118,8 +123,6 @@ const handleSelect = (article) => {
     path: targetPath,
     query: { path: article.path }
   })
-  
-  closeSearch()
 }
 
 const getPreview = (content) => {
