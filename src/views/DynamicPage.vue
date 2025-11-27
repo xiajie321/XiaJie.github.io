@@ -53,11 +53,15 @@
           </div>
         </div>
 
-        <div class="grid gap-6">
+        <TransitionGroup 
+          name="list" 
+          tag="div" 
+          class="flex flex-col gap-6 relative min-h-[200px]"
+        >
           <article 
-            v-for="(article, index) in currentArticles" 
+            v-for="(article, index) in displayedArticles" 
             :key="article.path"
-            class="bg-gray-50/80 dark:bg-gray-800/80 pixel-border-sm p-4 hover:bg-white dark:hover:bg-gray-700 transition-all cursor-pointer group flex gap-4 hover:-translate-y-1 hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,0.2)]"
+            class="bg-gray-50/80 dark:bg-gray-800/80 pixel-border-sm p-4 hover:bg-white dark:hover:bg-gray-700 transition-all cursor-pointer group flex gap-4 hover:-translate-y-1 hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,0.2)] w-full"
             @click="selectArticle(article)"
           >
             <!-- 随机像素图标装饰 -->
@@ -90,11 +94,11 @@
               </p>
             </div>
           </article>
-        </div>
+        </TransitionGroup>
       </div>
 
       <!-- 文章详情/单页视图 -->
-      <div v-else class="max-w-3xl mx-auto relative" key="detail">
+      <div v-else class="max-w-3xl mx-auto relative" :key="selectedArticle?.path || 'detail'">
         <!-- 首页 Hero 区域 -->
         <div v-if="currentConfig?.type === 'home' && !selectedArticle" class="mb-12 text-center">
           <div class="inline-block w-24 h-24 bg-pixel-primary pixel-border mb-4 animate-squash-bounce relative overflow-hidden">
@@ -153,11 +157,11 @@
         </div>
 
         <button 
-          v-if="selectedArticle && currentConfig?.type === 'list'"
+          v-if="selectedArticle"
           @click="goBack"
           class="mb-6 text-sm text-gray-500 hover:text-pixel-primary flex items-center gap-2"
         >
-          ← 返回列表
+          ← {{ currentConfig?.type === 'home' ? '返回首页' : '返回列表' }}
         </button>
 
         <div class="markdown-body bg-white/50 dark:bg-gray-900/50 p-4 rounded-lg" v-html="renderedContent"></div>
@@ -171,19 +175,6 @@
 
     </transition>
 
-    <!-- 悬浮工具栏 (仅回到顶部按钮，移动端可见) -->
-    <div 
-      v-if="isArticlePage"
-      class="fixed right-4 bottom-24 z-40 lg:hidden"
-    >
-      <button 
-        @click="scrollToTop"
-        class="w-10 h-10 bg-white dark:bg-gray-800 text-pixel-dark dark:text-white rounded-full border-2 border-pixel-dark shadow-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 opacity-80"
-        title="回到顶部"
-      >
-        <span class="text-lg">⬆️</span>
-      </button>
-    </div>
   </div>
   
   <div v-else class="flex justify-center items-center h-64">
@@ -210,6 +201,7 @@ const toc = ref([])
 const isTocOpen = ref(false)
 const selectedTag = ref(null)
 const selectedModule = ref(null)
+const visibleCount = ref(10) // 初始显示数量
 
 // 获取当前栏目配置
 const currentConfig = computed(() => {
@@ -270,10 +262,25 @@ const currentArticles = computed(() => {
   return articles
 })
 
+// 分页显示的列表
+const displayedArticles = computed(() => {
+  return currentArticles.value.slice(0, visibleCount.value)
+})
+
+// 监听筛选条件变化，重置显示数量
+watch([selectedModule, selectedTag, () => route.params.category], () => {
+  visibleCount.value = 10
+  if (route.params.category) {
+    // 只有在切换栏目时才完全重置筛选器，如果是同栏目下筛选则保留
+    // 但上面的 watch 已经处理了 route.params.category 的筛选器重置
+  }
+})
+
 // 监听路由变化，切换栏目时重置筛选
 watch(() => route.params.category, () => {
   selectedTag.value = null
   selectedModule.value = null
+  visibleCount.value = 10
 })
 
 // 判断是否为文章详情页或单页
@@ -399,6 +406,7 @@ watchEffect(() => {
   if (!content) {
     renderedContent.value = ''
     toc.value = []
+    blogStore.currentToc = []
     return
   }
   
@@ -429,45 +437,64 @@ watchEffect(() => {
   toc.value = [...tempToc]
   blogStore.currentToc = [...tempToc]
   
-  // 设置 IntersectionObserver
+  // 设置滚动监听
   nextTick(() => {
-    setupIntersectionObserver()
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // 初始化检查
   })
 })
 
-let observer = null
-
-const setupIntersectionObserver = () => {
-  if (observer) {
-    observer.disconnect()
-  }
-
-  const options = {
-    root: null,
-    rootMargin: '-100px 0px -60% 0px', // 顶部偏移，避免导航栏遮挡；底部偏移，确保高亮在屏幕上方区域
-    threshold: [0, 1]
-  }
-
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        blogStore.activeHeadingId = entry.target.id
+const handleScroll = () => {
+  // 处理无限加载
+  if (currentConfig.value?.type === 'list' && !selectedArticle.value) {
+    const scrollBottom = window.scrollY + window.innerHeight
+    const documentHeight = document.documentElement.scrollHeight
+    
+    if (scrollBottom >= documentHeight - 200) {
+      if (visibleCount.value < currentArticles.value.length) {
+        visibleCount.value += 10
       }
-    })
-  }, options)
-
-  toc.value.forEach(item => {
-    const element = document.getElementById(item.id)
-    if (element) {
-      observer.observe(element)
     }
-  })
+  }
+
+  if (toc.value.length === 0) return
+
+  const scrollY = window.scrollY
+  const headerOffset = 120 // 导航栏高度 + 一点缓冲
+  
+  // 找到当前视口中最靠上的标题
+  let activeId = ''
+  
+  for (let i = 0; i < toc.value.length; i++) {
+    const item = toc.value[i]
+    const element = document.getElementById(item.id)
+    
+    if (element) {
+      // 元素的绝对顶部位置
+      const offsetTop = element.offsetTop
+      
+      // 如果当前滚动位置超过了元素的顶部（减去偏移），说明已经进入该章节
+      if (scrollY >= offsetTop - headerOffset) {
+        activeId = item.id
+      } else {
+        // 因为是按顺序遍历，一旦发现没超过的，后面的肯定也没超过，直接退出
+        break
+      }
+    }
+  }
+  
+  // 如果页面滚动到底部，强制高亮最后一个
+  if ((window.innerHeight + scrollY) >= document.body.offsetHeight - 50) {
+    if (toc.value.length > 0) {
+      activeId = toc.value[toc.value.length - 1].id
+    }
+  }
+
+  blogStore.activeHeadingId = activeId
 }
 
 onUnmounted(() => {
-  if (observer) {
-    observer.disconnect()
-  }
+  window.removeEventListener('scroll', handleScroll)
   blogStore.currentToc = []
   blogStore.activeHeadingId = ''
 })
@@ -561,5 +588,27 @@ const getRandomIcon = (index) => {
 .pop-up-leave-to {
   opacity: 0;
   transform: scale(0.8) translateY(20px);
+}
+
+/* 列表筛选动画 */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.list-leave-active {
+  position: absolute;
+  width: 100%;
 }
 </style>

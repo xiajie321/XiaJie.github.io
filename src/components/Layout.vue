@@ -152,6 +152,57 @@
          </svg>
       </div>
 
+      <!-- 新增背景元素 -->
+      <div class="hidden lg:block absolute left-[15%] top-[15%] animate-bounce-slow opacity-80" style="animation-delay: 1s">
+        <!-- 塞尔达红心 -->
+        <svg width="32" height="32" viewBox="0 0 16 16" class="pixel-art">
+          <path d="M2 2h5v3h2v-3h5v5l-6 6l-6-6z" fill="#ef4444" stroke="#991b1b" stroke-width="0.5"/>
+          <rect x="3" y="3" width="2" height="2" fill="#fca5a5" />
+        </svg>
+      </div>
+
+      <div class="hidden lg:block absolute right-[8%] bottom-[30%] animate-float-delayed opacity-80" style="animation-delay: 2.5s">
+        <!-- 马里奥蘑菇 -->
+        <svg width="40" height="40" viewBox="0 0 16 16" class="pixel-art">
+          <!-- 伞盖 -->
+          <path d="M3 3h10v5h-10z" fill="#ef4444" />
+          <rect x="2" y="4" width="1" height="3" fill="#ef4444" />
+          <rect x="13" y="4" width="1" height="3" fill="#ef4444" />
+          <!-- 白点 -->
+          <rect x="4" y="4" width="2" height="2" fill="#fff" />
+          <rect x="10" y="4" width="2" height="2" fill="#fff" />
+          <rect x="7" y="2" width="2" height="1" fill="#fff" />
+          <!-- 脸 -->
+          <path d="M4 8h8v5h-8z" fill="#fcd34d" />
+          <rect x="3" y="9" width="1" height="3" fill="#fcd34d" />
+          <rect x="12" y="9" width="1" height="3" fill="#fcd34d" />
+          <!-- 眼睛 -->
+          <rect x="6" y="9" width="1" height="2" fill="#000" />
+          <rect x="9" y="9" width="1" height="2" fill="#000" />
+        </svg>
+      </div>
+
+      <div class="hidden md:block absolute left-[5%] top-[50%] animate-spin-slow opacity-60" style="animation-delay: 3s">
+        <!-- 马里奥无敌星 -->
+        <svg width="36" height="36" viewBox="0 0 16 16" class="pixel-art">
+          <path d="M8 0l2 6h6l-5 4l2 6l-5-4l-5 4l2-6l-5-4h6z" fill="#fcd116" />
+          <rect x="7" y="4" width="2" height="8" fill="#000" opacity="0.1" />
+          <rect x="8" y="5" width="1" height="2" fill="#000" />
+          <rect x="6" y="6" width="1" height="2" fill="#000" />
+        </svg>
+      </div>
+
+      <div class="hidden md:block absolute right-[12%] top-[5%] animate-float opacity-70">
+        <!-- 宝可梦药水 -->
+        <svg width="28" height="28" viewBox="0 0 16 16" class="pixel-art">
+          <rect x="6" y="1" width="4" height="2" fill="#a855f7" />
+          <rect x="4" y="3" width="8" height="10" fill="#a855f7" />
+          <rect x="5" y="13" width="6" height="1" fill="#a855f7" />
+          <rect x="6" y="4" width="2" height="6" fill="#fff" opacity="0.3" />
+          <rect x="5" y="3" width="6" height="1" fill="#9333ea" />
+        </svg>
+      </div>
+
       <!-- 主要内容容器 -->
       <!-- 添加 text-gray-900 dark:text-gray-100 以强制文字颜色，解决 Light Mode 下 Articles 主题文字看不清的问题 -->
       <div class="flex-grow w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-6 min-h-[60vh] relative z-10 transition-all duration-300 text-gray-900 dark:text-gray-100">
@@ -160,7 +211,9 @@
         <div class="absolute bottom-2 left-2 w-4 h-4 bg-pixel-primary opacity-50"></div>
         
         <router-view v-slot="{ Component, route }">
-          <component :is="Component" :key="route.path" />
+          <transition name="page" mode="out-in">
+            <component :is="Component" :key="route.fullPath" />
+          </transition>
         </router-view>
       </div>
 

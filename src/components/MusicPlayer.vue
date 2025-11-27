@@ -28,15 +28,31 @@
         </div>
 
         <!-- 控制区 -->
-        <div class="flex justify-between items-center mt-1">
+        <div class="flex flex-col gap-2 mt-1">
           <!-- 播放控制 -->
-          <div class="flex gap-2">
+          <div class="flex justify-between w-full px-2">
+            <button 
+              @click="toggleLoopMode"
+              class="w-8 h-8 flex items-center justify-center bg-gray-600 text-white pixel-btn-sm hover:brightness-110 active:scale-95 text-xs"
+              :title="loopMode === 'single' ? '单曲循环' : '顺序播放'"
+            >
+              {{ loopMode === 'single' ? '1' : '∞' }}
+            </button>
+            
+            <button 
+              @click="prevTrack"
+              class="w-8 h-8 flex items-center justify-center bg-pixel-secondary text-white pixel-btn-sm hover:brightness-110 active:scale-95"
+            >
+              <<
+            </button>
+
             <button 
               @click="togglePlay"
               class="w-8 h-8 flex items-center justify-center bg-pixel-primary text-white pixel-btn-sm hover:brightness-110 active:scale-95"
             >
               {{ isPlaying ? '||' : '▶' }}
             </button>
+            
             <button 
               @click="nextTrack"
               class="w-8 h-8 flex items-center justify-center bg-pixel-secondary text-white pixel-btn-sm hover:brightness-110 active:scale-95"
@@ -46,8 +62,8 @@
           </div>
 
           <!-- 音量控制 -->
-          <div class="flex items-center gap-1 w-24">
-            <span class="text-[10px] font-pixel">音量</span>
+          <div class="flex items-center gap-1 w-full">
+            <span class="text-[10px] font-pixel whitespace-nowrap">音量</span>
             <input 
               type="range" 
               min="0" 
@@ -62,7 +78,7 @@
       </div>
     </div>
     
-    <audio ref="audioPlayer" @ended="nextTrack" />
+    <audio ref="audioPlayer" @ended="handleEnded" />
   </div>
 </template>
 
@@ -74,6 +90,7 @@ const playlist = ref([])
 const currentIndex = ref(0)
 const audioPlayer = ref(null)
 const volume = ref(0.5)
+const loopMode = ref('sequence') // 'sequence' | 'single'
 
 // 拖拽相关状态
 const playerRef = ref(null)
@@ -159,6 +176,20 @@ const togglePlay = () => {
   isPlaying.value = !isPlaying.value
 }
 
+const prevTrack = () => {
+  if (playlist.value.length === 0) return
+  
+  let prevIndex = currentIndex.value - 1
+  if (prevIndex < 0) {
+    prevIndex = playlist.value.length - 1
+  }
+  loadTrack(prevIndex)
+  if (!isPlaying.value) {
+    isPlaying.value = true
+    audioPlayer.value.play()
+  }
+}
+
 const nextTrack = () => {
   if (playlist.value.length === 0) return
   
@@ -171,6 +202,21 @@ const nextTrack = () => {
     isPlaying.value = true
     audioPlayer.value.play()
   }
+}
+
+const handleEnded = () => {
+  if (loopMode.value === 'single') {
+    // 单曲循环：重置时间并播放
+    audioPlayer.value.currentTime = 0
+    audioPlayer.value.play()
+  } else {
+    // 顺序播放：下一首
+    nextTrack()
+  }
+}
+
+const toggleLoopMode = () => {
+  loopMode.value = loopMode.value === 'sequence' ? 'single' : 'sequence'
 }
 
 const updateVolume = () => {
