@@ -174,8 +174,8 @@
         <div id="comments-section">
           <Comment 
             v-if="isArticlePage && blogStore.siteConfig.features?.comments" 
-            :key="selectedArticle?.path || route.fullPath"
-            :path="selectedArticle?.path || route.fullPath"
+            :key="currentPath"
+            :path="currentPath"
           />
         </div>
       </div>
@@ -363,6 +363,19 @@ watch(() => route.params.category, () => {
 const isArticlePage = computed(() => {
   // 如果选择了文章，或者是单页类型（如首页、关于页）且有内容
   return !!selectedArticle.value || (currentConfig.value?.type !== 'list' && currentArticles.value.length > 0)
+})
+
+// 获取当前内容的稳定路径（用于评论区映射）
+const currentPath = computed(() => {
+  if (selectedArticle.value) {
+    return selectedArticle.value.path
+  }
+  // 对于单页（Home/About），使用其对应的 md 文件路径
+  if (currentConfig.value?.type !== 'list' && currentArticles.value.length > 0) {
+    return currentArticles.value[0].path
+  }
+  // 兜底
+  return route.fullPath
 })
 
 // 简单的 Slugger 实现
