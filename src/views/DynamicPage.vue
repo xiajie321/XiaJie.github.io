@@ -171,11 +171,13 @@
         ></div>
 
         <!-- 评论组件 -->
-        <Comment 
-          v-if="isArticlePage && blogStore.siteConfig.features?.comments" 
-          :key="selectedArticle?.path || route.fullPath"
-          :path="selectedArticle?.path || route.fullPath"
-        />
+        <div id="comments-section">
+          <Comment 
+            v-if="isArticlePage && blogStore.siteConfig.features?.comments" 
+            :key="selectedArticle?.path || route.fullPath"
+            :path="selectedArticle?.path || route.fullPath"
+          />
+        </div>
       </div>
 
     </transition>

@@ -587,10 +587,3 @@ Cinemachine 是 Unity 中功能强大的相机系统，它提供了一套完整�
 - [Unity 论坛 Cinemachine 板块](https://forum.unity.com/forums/cinemachine.136/)
 - [Cinemachine GitHub 仓库](https://github.com/Unity-Technologies/Cinemachine)
 
----
-
-**更新日志**：
-- 2024-01-01：初始版本，涵盖 Cinemachine 核心概念和功能
-- 2024-01-15：添加了高级功能和性能优化章节
-- 2024-02-01：补充了脚本编程和常见问题解决方案
-- 2024-02-15：更新了版本兼容性和迁移指南

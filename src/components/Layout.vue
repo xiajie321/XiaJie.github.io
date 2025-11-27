@@ -249,6 +249,17 @@
               </a>
             </li>
           </ul>
+          
+          <!-- 快速跳转评论区 -->
+          <div class="mt-4 pt-4 border-t-2 border-gray-100 dark:border-gray-700">
+            <a 
+              href="#comments-section"
+              class="block transition-colors text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-pixel-secondary flex items-center gap-2"
+              @click.prevent="scrollToHeading('comments-section')"
+            >
+              <span class="text-lg">💬</span> 跳转至评论区
+            </a>
+          </div>
         </div>
 
         <!-- 最近更新 (始终显示) -->
