@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col font-sans bg-transition overflow-x-hidden" :class="themeClass">
+  <div class="min-h-screen flex flex-col font-sans bg-transition" :class="themeClass">
     <!-- 像素风格导航栏 -->
     <header class="bg-white/90 dark:bg-gray-900/90 dark:border-gray-700 backdrop-blur border-b-4 border-pixel-dark p-4 sticky top-0 z-50 transition-colors duration-300 text-gray-900 dark:text-gray-100">
       <div class="container mx-auto flex justify-between items-center">
@@ -154,7 +154,7 @@
 
       <!-- 主要内容容器 -->
       <!-- 添加 text-gray-900 dark:text-gray-100 以强制文字颜色，解决 Light Mode 下 Articles 主题文字看不清的问题 -->
-      <div class="flex-grow w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-6 min-h-[60vh] relative overflow-hidden z-10 transition-all duration-300 text-gray-900 dark:text-gray-100">
+      <div class="flex-grow w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-6 min-h-[60vh] relative z-10 transition-all duration-300 text-gray-900 dark:text-gray-100">
         <!-- 装饰性像素元素 -->
         <div class="absolute top-2 right-2 w-4 h-4 bg-pixel-secondary opacity-50"></div>
         <div class="absolute bottom-2 left-2 w-4 h-4 bg-pixel-primary opacity-50"></div>
