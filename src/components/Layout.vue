@@ -1,4 +1,4 @@
-<template>
+o<template>
   <div class="min-h-screen flex flex-col font-sans bg-transition" :class="themeClass">
     <!-- 像素风格导航栏 -->
     <header class="bg-white/90 dark:bg-gray-900/90 dark:border-gray-700 backdrop-blur border-b-4 border-pixel-dark p-4 sticky top-0 z-50 transition-colors duration-300 text-gray-900 dark:text-gray-100">
@@ -125,6 +125,96 @@
       </div>
 
       <!-- 更多背景元素 (随机散布) -->
+      <!-- 皮卡丘 (Pikachu) -->
+      <div class="hidden xl:block absolute right-[5%] bottom-[15%] animate-bounce-slow" style="animation-delay: 0.8s">
+        <svg width="48" height="48" viewBox="0 0 16 16" class="pixel-art">
+          <!-- 耳朵 -->
+          <rect x="2" y="1" width="2" height="4" fill="#fcd116" />
+          <rect x="2" y="1" width="2" height="1" fill="#000" />
+          <rect x="11" y="1" width="2" height="4" fill="#fcd116" />
+          <rect x="11" y="1" width="2" height="1" fill="#000" />
+          <!-- 脸 -->
+          <rect x="3" y="4" width="9" height="7" fill="#fcd116" />
+          <rect x="4" y="11" width="7" height="1" fill="#fcd116" />
+          <!-- 眼睛 -->
+          <rect x="4" y="6" width="2" height="2" fill="#000" />
+          <rect x="5" y="6" width="1" height="1" fill="#fff" />
+          <rect x="9" y="6" width="2" height="2" fill="#000" />
+          <rect x="10" y="6" width="1" height="1" fill="#fff" />
+          <!-- 脸颊 -->
+          <rect x="3" y="8" width="2" height="2" fill="#ef4444" />
+          <rect x="10" y="8" width="2" height="2" fill="#ef4444" />
+          <!-- 嘴 -->
+          <rect x="7" y="9" width="1" height="1" fill="#000" />
+        </svg>
+      </div>
+
+      <!-- 妙蛙种子 (Bulbasaur) -->
+      <div class="hidden xl:block absolute left-[8%] top-[70%] animate-float" style="animation-delay: 1.2s">
+        <svg width="48" height="48" viewBox="0 0 16 16" class="pixel-art">
+          <!-- 种子 -->
+          <path d="M6 2h4v4h-4z" fill="#4ade80" />
+          <rect x="7" y="3" width="2" height="2" fill="#22c55e" />
+          <!-- 身体 -->
+          <path d="M3 5h10v7h-10z" fill="#22d3ee" />
+          <rect x="4" y="12" width="2" height="2" fill="#22d3ee" />
+          <rect x="10" y="12" width="2" height="2" fill="#22d3ee" />
+          <!-- 眼睛 -->
+          <rect x="4" y="7" width="2" height="2" fill="#fff" />
+          <rect x="5" y="8" width="1" height="1" fill="#f00" />
+          <rect x="10" y="7" width="2" height="2" fill="#fff" />
+          <rect x="10" y="8" width="1" height="1" fill="#f00" />
+        </svg>
+      </div>
+
+      <!-- 林克 (Link) -->
+      <div class="hidden 2xl:block absolute right-[15%] top-[40%] animate-float-delayed" style="animation-delay: 2.5s">
+        <svg width="40" height="40" viewBox="0 0 16 16" class="pixel-art">
+          <!-- 帽子 -->
+          <path d="M6 1h4v3h2v2h-8v-2h2z" fill="#16a34a" />
+          <rect x="12" y="4" width="2" height="4" fill="#16a34a" />
+          <!-- 脸 -->
+          <rect x="5" y="6" width="6" height="5" fill="#fcd34d" />
+          <!-- 眼睛 -->
+          <rect x="6" y="8" width="1" height="1" fill="#000" />
+          <rect x="9" y="8" width="1" height="1" fill="#000" />
+          <!-- 衣服 -->
+          <rect x="5" y="11" width="6" height="4" fill="#16a34a" />
+        </svg>
+      </div>
+
+      <!-- 塞尔达公主 (Zelda) -->
+      <div class="hidden 2xl:block absolute left-[20%] top-[30%] animate-float" style="animation-delay: 3.2s">
+        <svg width="40" height="40" viewBox="0 0 16 16" class="pixel-art">
+          <!-- 头发 -->
+          <path d="M5 2h6v3h2v4h-1v-2h-1v2h-1v-2h-1v-2h-2v2h-1v-2h-1v2h-1v-2h-1v-4h2z" fill="#fcd116" />
+          <!-- 皇冠 -->
+          <rect x="7" y="1" width="2" height="2" fill="#d6a600" />
+          <rect x="8" y="2" width="1" height="1" fill="#ef4444" />
+          <!-- 脸 -->
+          <rect x="6" y="5" width="4" height="4" fill="#fcd34d" />
+          <!-- 眼睛 -->
+          <rect x="6" y="7" width="1" height="1" fill="#000" />
+          <rect x="9" y="7" width="1" height="1" fill="#000" />
+          <!-- 裙子 -->
+          <rect x="5" y="9" width="6" height="6" fill="#f472b6" />
+          <rect x="6" y="9" width="4" height="6" fill="#db2777" />
+        </svg>
+      </div>
+
+      <!-- 水箭龟 (Blastoise) - 龟壳 -->
+      <div class="hidden xl:block absolute left-[2%] bottom-[40%] animate-spin-slow" style="animation-delay: 4s">
+        <svg width="40" height="40" viewBox="0 0 16 16" class="pixel-art">
+          <rect x="4" y="2" width="8" height="12" fill="#78350f" />
+          <rect x="2" y="4" width="12" height="8" fill="#78350f" />
+          <rect x="5" y="3" width="6" height="10" fill="#92400e" />
+          <rect x="3" y="5" width="10" height="6" fill="#92400e" />
+          <!-- 炮管 -->
+          <rect x="3" y="2" width="2" height="4" fill="#9ca3af" />
+          <rect x="11" y="2" width="2" height="4" fill="#9ca3af" />
+        </svg>
+      </div>
+
       <div class="hidden xl:block absolute right-[10%] top-[60%] animate-float" style="animation-delay: 2s">
          <!-- 塞尔达卢比 (Rupee) -->
          <svg width="32" height="32" viewBox="0 0 16 16" class="pixel-art">
@@ -218,7 +308,7 @@
       </div>
 
       <!-- 右侧侧边栏：TOC 和 最近更新 -->
-      <aside class="hidden lg:flex flex-col w-72 shrink-0 sticky top-24 max-h-[calc(100vh-8rem)] gap-4 p-4">
+      <aside class="hidden lg:flex flex-col w-72 shrink-0 sticky top-24 max-h-[calc(100vh-10rem)] gap-4 px-4 pt-4 pb-8">
         <!-- 快速跳转评论区 (独立块，固定在顶部) -->
         <div v-if="blogStore.currentToc.length > 0" class="shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
           <a 
@@ -231,10 +321,10 @@
           </a>
         </div>
 
-        <!-- 滚动区域：包含目录和最近更新 -->
+        <!-- 滚动区域：仅包含目录 -->
         <div 
           ref="tocContainer"
-          class="flex-grow overflow-y-auto custom-scrollbar space-y-4 pr-1"
+          class="flex-grow overflow-y-auto min-h-0 custom-scrollbar pr-1"
           @mouseenter="isTocHovered = true"
           @mouseleave="isTocHovered = false"
         >
@@ -264,29 +354,29 @@
               </li>
             </ul>
           </div>
+        </div>
 
-          <!-- 最近更新 (始终显示) -->
-          <div class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
-            <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
-              <span class="text-pixel-primary">★</span> 最近更新
-            </h3>
-            <ul class="space-y-3">
-              <li v-for="article in blogStore.recentArticles" :key="article.path">
-                <router-link 
-                  :to="{ path: getArticleLink(article), query: { path: article.path } }"
-                  class="group block hover:translate-x-1 transition-transform"
-                >
-                  <div class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-pixel-primary transition-colors truncate">
-                    {{ article.title || '无标题' }}
-                  </div>
-                  <div class="text-[10px] text-gray-500 dark:text-gray-400 font-pixel mt-1 flex justify-between">
-                    <span>{{ formatDate(article.date) }}</span>
-                    <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded transition-colors">{{ article.category }}</span>
-                  </div>
-                </router-link>
-              </li>
-            </ul>
-          </div>
+        <!-- 最近更新 (固定在底部) -->
+        <div class="shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 pb-6 text-gray-900 dark:text-gray-100">
+          <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+            <span class="text-pixel-primary">★</span> 最近更新
+          </h3>
+          <ul class="space-y-3">
+            <li v-for="article in blogStore.recentArticles" :key="article.path">
+              <router-link 
+                :to="{ path: getArticleLink(article), query: { path: article.path } }"
+                class="group block hover:translate-x-1 transition-transform"
+              >
+                <div class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-pixel-primary transition-colors truncate">
+                  {{ article.title || '无标题' }}
+                </div>
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-pixel mt-1 flex justify-between">
+                  <span>{{ formatDate(article.date) }}</span>
+                  <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded transition-colors">{{ article.category }}</span>
+                </div>
+              </router-link>
+            </li>
+          </ul>
         </div>
       </aside>
     </main>

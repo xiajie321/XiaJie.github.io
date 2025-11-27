@@ -12,8 +12,7 @@ html {
 body {
   @apply bg-pixel-bg text-pixel-dark font-sans;
   image-rendering: pixelated;
-  /* 移除 overflow-x: hidden 以修复 position: sticky 失效的问题 */
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
   /* 自定义光标：Link 正常状态 */
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%234ade80" d="M4 4h16v16H4z"/><path fill="%23166534" d="M4 4h16v4H4z"/><path fill="black" d="M8 12h2v2H8zM14 12h2v2h-2z"/><path fill="none" stroke="black" stroke-width="2" d="M0 0h24v24H0z"/></svg>') 12 12, auto;
 }

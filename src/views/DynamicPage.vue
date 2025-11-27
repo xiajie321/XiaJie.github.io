@@ -100,16 +100,40 @@
       <!-- 文章详情/单页视图 -->
       <div v-else class="max-w-3xl mx-auto relative" :key="selectedArticle?.path || 'detail'">
         <!-- 首页 Hero 区域 -->
-        <div v-if="currentConfig?.type === 'home' && !selectedArticle" class="mb-12 text-center">
-          <div class="inline-block w-24 h-24 bg-pixel-primary pixel-border mb-4 animate-squash-bounce relative overflow-hidden">
+        <div v-if="currentConfig?.type === 'home' && !selectedArticle" class="mb-12 text-center relative">
+          <!-- 粒子容器 -->
+          <div class="absolute inset-0 pointer-events-none overflow-visible flex justify-center items-center">
+             <div v-for="p in particles" :key="p.id" 
+                  class="absolute w-2 h-2 bg-orange-500 rounded-sm"
+                  :style="{
+                    transform: `translate(${p.x}px, ${p.y}px) rotate(${p.r}deg)`,
+                    opacity: p.life,
+                    backgroundColor: p.color
+                  }"
+             ></div>
+          </div>
+
+          <div 
+            class="inline-block w-24 h-24 bg-pixel-primary pixel-border mb-4 relative overflow-hidden cursor-pointer select-none transition-colors duration-200"
+            :class="[isJumping ? 'animate-jump-spin' : 'animate-squash-bounce']"
+            :style="{ borderColor: heatLevel > 30 ? '#ff4500' : '' }"
+            @click="handleHeroClick"
+            :key="animationKey"
+          >
+             <!-- 红色遮罩层 (用于变红效果) -->
+             <div 
+               class="absolute inset-0 bg-red-600 mix-blend-overlay z-10 pointer-events-none transition-opacity duration-100"
+               :style="{ opacity: heatLevel / 100 }"
+             ></div>
+
              <!-- 动态图片或默认像素脸 -->
              <img 
                v-if="blogStore.siteConfig.images?.homeHero"
                :src="resolvePath(blogStore.siteConfig.images.homeHero)" 
                alt="Hero" 
-               class="w-full h-full object-cover" 
+               class="w-full h-full object-cover relative z-0" 
              />
-             <svg v-else viewBox="0 0 32 32" class="w-full h-full">
+             <svg v-else viewBox="0 0 32 32" class="w-full h-full relative z-0">
                <rect x="8" y="8" width="16" height="16" fill="#4ade80" />
                <rect x="8" y="8" width="16" height="4" fill="#166534" />
                <rect x="12" y="16" width="2" height="2" fill="#000" />
@@ -247,6 +271,83 @@ const selectedModule = ref(null)
 const visibleCount = ref(10) // 初始显示数量
 const previewImage = ref(null)
 const listScrollTop = ref(0)
+
+// Hero 交互状态
+const isJumping = ref(false)
+const animationKey = ref(0)
+const heatLevel = ref(0)
+const particles = ref([])
+let heatDecayTimer = null
+let particleIdCounter = 0
+
+const handleHeroClick = () => {
+  isJumping.value = true
+  animationKey.value++ // 强制重启动画
+  
+  // 增加热度
+  heatLevel.value = Math.min(heatLevel.value + 20, 80)
+  
+  // 生成粒子
+  spawnParticles()
+  
+  playSound('jump') // 假设有 jump 音效，或者复用 click
+  
+  // 延时恢复
+  clearTimeout(heatDecayTimer)
+  heatDecayTimer = setTimeout(() => {
+    isJumping.value = false
+    decreaseHeat()
+  }, 800)
+}
+
+const decreaseHeat = () => {
+  if (heatLevel.value > 0) {
+    heatLevel.value = Math.max(0, heatLevel.value - 2)
+    requestAnimationFrame(decreaseHeat)
+  }
+}
+
+const spawnParticles = () => {
+  const count = 5 + Math.floor(Math.random() * 5)
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2
+    const speed = 2 + Math.random() * 4
+    const color = Math.random() > 0.5 ? '#ff4500' : '#ff8c00' // 红橙色
+    
+    particles.value.push({
+      id: particleIdCounter++,
+      x: 0,
+      y: 0,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 5, // 向上倾向
+      r: Math.random() * 360,
+      life: 1.0,
+      color
+    })
+  }
+  
+  if (particles.value.length === count) { // 第一次添加时启动循环
+    updateParticles()
+  }
+}
+
+const updateParticles = () => {
+  if (particles.value.length === 0) return
+  
+  particles.value = particles.value.filter(p => p.life > 0)
+  
+  particles.value.forEach(p => {
+    p.x += p.vx
+    p.y += p.vy
+    p.vy += 0.2 // 重力
+    p.life -= 0.05
+    p.r += 10
+  })
+  
+  if (particles.value.length > 0) {
+    requestAnimationFrame(updateParticles)
+  }
+}
 
 // 图片双击处理
 const handleImageDblClick = (e) => {
@@ -761,5 +862,30 @@ const getRandomIcon = (index) => {
 .list-leave-active {
   position: absolute;
   width: 100%;
+}
+
+@keyframes jump-spin {
+  0% { transform: translateY(0) rotate(0deg) scale(1.1, 0.9); }
+  10% { transform: translateY(0) rotate(0deg) scale(0.9, 1.1); }
+  40% { transform: translateY(-60px) rotate(180deg) scale(1); }
+  50% { transform: translateY(-70px) rotate(270deg) scale(1); }
+  80% { transform: translateY(0) rotate(360deg) scale(0.9, 1.1); }
+  100% { transform: translateY(0) rotate(360deg) scale(1); }
+}
+
+.animate-jump-spin {
+  animation: jump-spin 0.6s cubic-bezier(0.280, 0.840, 0.420, 1) forwards;
+}
+
+@keyframes squash-bounce {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  25% { transform: scale(1.1, 0.9) translateY(0); }
+  50% { transform: scale(0.9, 1.1) translateY(-5px); }
+  75% { transform: scale(1.05, 0.95) translateY(0); }
+}
+
+.animate-squash-bounce {
+  animation: squash-bounce 2s infinite ease-in-out;
+  transform-origin: bottom center;
 }
 </style>
