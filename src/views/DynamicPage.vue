@@ -533,6 +533,10 @@ const goBack = () => {
   playSound('back')
   selectedArticle.value = null
   isTocOpen.value = false
+  // 清除 path 查询参数，确保下次点击同一文章能触发路由变化
+  const query = { ...route.query }
+  delete query.path
+  router.push({ query })
 }
 
 const scrollToHeading = (id) => {
