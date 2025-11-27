@@ -1,10 +1,9 @@
 # 关于我
 
-嗨，我是这个博客的主人。
-
-热爱编程、设计和像素艺术。
+一个喜欢研究Unity的游戏爱好者,仅此而已。
 
 ## 联系方式
 
 - GitHub: [xiajie321](https://github.com/xiajie321)
-- Email: example@email.com
+- Email: 3113959631@QQ.com
+- QQ: 3113959631

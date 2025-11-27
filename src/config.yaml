@@ -2,9 +2,9 @@
 
 # 网站基本信息
 site:
-  title: 像素博客
-  description: 基于 Vue 3 构建的复古像素风格博客
-  author: 像素玩家
+  title: 丑兔子的个人博客
+  description: 基于 Vue 3 构建的像素风格博客
+  author: 欢迎来到丑兔子的个人博客
   # logo: P # 默认文字 Logo，如果配置了 images.logo 则优先使用图片
 
 # 自定义图片配置
@@ -26,15 +26,15 @@ features:
 # 如果留空则不显示对应按钮
 social:
   github: https://github.com/xiajie321
-  bilibili: https://bilibili.com
+  bilibili: https://space.bilibili.com/1289464475?spm_id_from=333.1007.0.0
   # twitter: https://twitter.com 
 
 # 评论系统配置 (Giscus)
 giscus:
   repo: xiajie321/XiaJie.github.io
-  repoId: R_kgDOKvxw_Q
+  repoId: R_kgDOQdDIYw
   category: General
-  categoryId: DIC_kwDOKvxw_c4CbQ3u
+  categoryId: DIC_kwDOQdDIY84CzHvt
   mapping: pathname
   strict: 0
   reactionsEnabled: 1

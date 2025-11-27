@@ -11,15 +11,24 @@ export const resolvePath = (path) => {
     return path
   }
   
-  // 获取 Base URL，默认为 '/'
-  const baseUrl = import.meta.env.BASE_URL
+  // 获取 Base URL
+  let baseUrl = import.meta.env.BASE_URL
   
-  // 如果 path 以 / 开头，且 baseUrl 不是 /，则拼接
-  if (path.startsWith('/') && baseUrl !== '/') {
-    // 避免双重斜杠，如果 baseUrl 以 / 结尾，path 以 / 开头
-    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-    return `${cleanBase}${path}`
+  // 确保 baseUrl 不以 / 结尾，除非它就是 /
+  if (baseUrl !== '/' && baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1)
   }
   
-  return path
+  // 确保 path 以 / 开头
+  if (!path.startsWith('/')) {
+    path = '/' + path
+  }
+  
+  // 如果 baseUrl 是 /，直接返回 path
+  if (baseUrl === '/') {
+    return path
+  }
+  
+  // 拼接
+  return `${baseUrl}${path}`
 }

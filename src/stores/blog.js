@@ -20,7 +20,7 @@ export const useBlogStore = defineStore('blog', {
       return all
         .filter(article => article.date) 
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5)
+        .slice(0, 3)
     }
   },
   actions: {
@@ -66,12 +66,25 @@ export const useBlogStore = defineStore('blog', {
           if (path.includes('/Image/')) continue
 
           const content = mds[path]
-          const dirName = path.split('/').slice(-2, -1)[0]
           
-          // 如果该目录没有对应的 config，可能是一个子目录或 Image 目录，这里我们只把文章归类到已知的栏目
-          // 但目前的逻辑是基于文件夹结构，所以我们暂时保留创建数组的逻辑，但在展示时只会展示有 config 的栏目
-          if (!this.articles[dirName]) {
-            this.articles[dirName] = []
+          // 解析路径结构以支持多级目录
+          // 路径格式示例: ../Root/Articles/nihao/aaa.md
+          const parts = path.split('/')
+          const rootIndex = parts.indexOf('Root')
+          
+          // 确保路径包含 Root 且有足够的深度
+          if (rootIndex === -1 || parts.length <= rootIndex + 2) continue
+          
+          // 一级目录 (Category)
+          const category = parts[rootIndex + 1]
+          
+          // 提取子模块路径 (从 Category 之后到文件名之前)
+          // 例如: ["nihao"] 或 ["nihao", "bbb"]
+          const subModules = parts.slice(rootIndex + 2, parts.length - 1)
+          const modulePath = subModules.join('/')
+          
+          if (!this.articles[category]) {
+            this.articles[category] = []
           }
 
           // 简单的 frontmatter 解析
@@ -85,17 +98,19 @@ export const useBlogStore = defineStore('blog', {
             }
             
             const body = match[2]
-            this.articles[dirName].push({
+            this.articles[category].push({
               ...frontmatter,
               content: body,
               path,
-              category: dirName
+              category: category,
+              module: modulePath // 添加模块信息
             })
           } else {
-             this.articles[dirName].push({
+             this.articles[category].push({
               content,
               path,
-              category: dirName
+              category: category,
+              module: modulePath // 添加模块信息
             })
           }
         }

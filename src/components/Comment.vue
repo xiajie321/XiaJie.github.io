@@ -5,24 +5,31 @@
 </template>
 
 <script setup>
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, computed } from 'vue'
+import { useBlogStore } from '../stores/blog'
 
+const blogStore = useBlogStore()
 const giscusContainer = ref(null)
 
+const giscusConfig = computed(() => blogStore.siteConfig.giscus || {})
+
 const loadGiscus = () => {
+  const config = giscusConfig.value
+  if (!config.repo) return // 如果没有配置，不加载
+
   const script = document.createElement('script')
   script.src = 'https://giscus.app/client.js'
-  script.setAttribute('data-repo', 'xiajie321/XiaJie.github.io')
-  script.setAttribute('data-repo-id', 'R_kgDOMwdR_g') // Replace with your actual Repo ID
-  script.setAttribute('data-category', 'General')
-  script.setAttribute('data-category-id', 'DIC_kwDOMwdR_s4Ciix_') // Replace with your actual Category ID
-  script.setAttribute('data-mapping', 'pathname')
-  script.setAttribute('data-strict', '0')
-  script.setAttribute('data-reactions-enabled', '1')
-  script.setAttribute('data-emit-metadata', '0')
-  script.setAttribute('data-input-position', 'bottom')
+  script.setAttribute('data-repo', config.repo)
+  script.setAttribute('data-repo-id', config.repoId)
+  script.setAttribute('data-category', config.category)
+  script.setAttribute('data-category-id', config.categoryId)
+  script.setAttribute('data-mapping', config.mapping || 'pathname')
+  script.setAttribute('data-strict', config.strict || '0')
+  script.setAttribute('data-reactions-enabled', config.reactionsEnabled || '1')
+  script.setAttribute('data-emit-metadata', config.emitMetadata || '0')
+  script.setAttribute('data-input-position', config.inputPosition || 'bottom')
   script.setAttribute('data-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-  script.setAttribute('data-lang', 'zh-CN')
+  script.setAttribute('data-lang', config.lang || 'zh-CN')
   script.setAttribute('crossorigin', 'anonymous')
   script.async = true
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col font-sans bg-transition" :class="themeClass">
+  <div class="min-h-screen flex flex-col font-sans bg-transition overflow-x-hidden" :class="themeClass">
     <!-- 像素风格导航栏 -->
     <header class="bg-white/90 dark:bg-gray-900/90 dark:border-gray-700 backdrop-blur border-b-4 border-pixel-dark p-4 sticky top-0 z-50 transition-colors duration-300 text-gray-900 dark:text-gray-100">
       <div class="container mx-auto flex justify-between items-center">
@@ -160,9 +160,7 @@
         <div class="absolute bottom-2 left-2 w-4 h-4 bg-pixel-primary opacity-50"></div>
         
         <router-view v-slot="{ Component, route }">
-          <transition name="page" mode="out-in">
-            <component :is="Component" :key="route.path" />
-          </transition>
+          <component :is="Component" :key="route.path" />
         </router-view>
       </div>
 

@@ -7,8 +7,36 @@
           <h2 class="text-3xl font-pixel text-pixel-primary mb-2">{{ currentConfig.title }}</h2>
           <p class="text-gray-600 mb-4">{{ currentConfig.description }}</p>
           
+          <!-- 模块筛选器 -->
+          <div v-if="availableModules.length > 0" class="flex flex-wrap gap-2 mt-4 mb-2">
+            <button
+              @click="selectedModule = null"
+              class="px-3 py-1 text-xs rounded-md transition-all duration-200 pixel-border-sm"
+              :class="[
+                !selectedModule 
+                  ? 'bg-pixel-dark text-white' 
+                  : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              ]"
+            >
+              全部模块
+            </button>
+            <button
+              v-for="mod in availableModules"
+              :key="mod"
+              @click="selectedModule = selectedModule === mod ? null : mod"
+              class="px-3 py-1 text-xs rounded-md transition-all duration-200 pixel-border-sm"
+              :class="[
+                selectedModule === mod 
+                  ? 'bg-pixel-primary text-white' 
+                  : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              ]"
+            >
+              📂 {{ mod }}
+            </button>
+          </div>
+
           <!-- 标签筛选器 -->
-          <div v-if="availableTags.length > 0" class="flex flex-wrap gap-2 mt-4">
+          <div v-if="availableTags.length > 0" class="flex flex-wrap gap-2 mt-2">
             <button
               v-for="tag in availableTags"
               :key="tag"
@@ -85,7 +113,43 @@
                <rect x="14" y="22" width="6" height="2" fill="#000" />
             </svg>
           </div>
-          <h1 class="text-4xl font-pixel mb-4 text-pixel-dark text-stroke dark:text-white">欢迎玩家 1</h1>
+          <h1 class="text-4xl font-pixel mb-4 text-pixel-dark text-stroke dark:text-white flex justify-center gap-1">
+            <span 
+              v-for="(char, index) in '欢迎来到我的博客！'" 
+              :key="index"
+              class="inline-block animate-bounce"
+              :style="{ animationDelay: index * 100 + 'ms' }"
+            >
+              {{ char }}
+            </span>
+          </h1>
+        </div>
+
+        <!-- 首页最近更新列表 -->
+        <div v-if="currentConfig?.type === 'home' && !selectedArticle" class="max-w-2xl mx-auto mb-12">
+          <h2 class="text-2xl font-pixel mb-6 text-center text-pixel-dark dark:text-white">
+            <span class="border-b-4 border-pixel-primary pb-2">最近更新</span>
+          </h2>
+          <div class="grid gap-4">
+            <article 
+              v-for="article in blogStore.recentArticles" 
+              :key="article.path"
+              class="bg-white/80 dark:bg-gray-800/80 p-4 pixel-border-sm hover:scale-[1.02] transition-transform cursor-pointer flex justify-between items-center group"
+              @click="selectArticle(article)"
+            >
+               <div class="truncate mr-4 flex-grow">
+                 <h3 class="font-bold text-lg truncate group-hover:text-pixel-primary transition-colors dark:text-gray-200">{{ article.title || '无标题' }}</h3>
+                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                   <span>{{ formatDate(article.date) }}</span>
+                   <span>·</span>
+                   <span class="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{ article.category }}</span>
+                 </div>
+               </div>
+               <div class="text-xl text-gray-400 group-hover:text-pixel-primary group-hover:translate-x-1 transition-all">
+                 →
+               </div>
+            </article>
+          </div>
         </div>
 
         <button 
@@ -99,7 +163,10 @@
         <div class="markdown-body bg-white/50 dark:bg-gray-900/50 p-4 rounded-lg" v-html="renderedContent"></div>
 
         <!-- 评论组件 -->
-        <Comment v-if="isArticlePage && blogStore.siteConfig.features?.comments" />
+        <Comment 
+          v-if="isArticlePage && blogStore.siteConfig.features?.comments" 
+          :key="selectedArticle?.path || route.path"
+        />
       </div>
 
     </transition>
@@ -142,6 +209,7 @@ const selectedArticle = ref(null)
 const toc = ref([])
 const isTocOpen = ref(false)
 const selectedTag = ref(null)
+const selectedModule = ref(null)
 
 // 获取当前栏目配置
 const currentConfig = computed(() => {
@@ -172,19 +240,40 @@ const availableTags = computed(() => {
   return Array.from(tags).sort()
 })
 
-// 根据标签筛选后的文章列表
+// 获取当前栏目所有可用的模块
+const availableModules = computed(() => {
+  const modules = new Set()
+  rawArticles.value.forEach(article => {
+    if (article.module) {
+      modules.add(article.module)
+    }
+  })
+  return Array.from(modules).sort()
+})
+
+// 根据筛选后的文章列表
 const currentArticles = computed(() => {
-  if (!selectedTag.value) {
-    return rawArticles.value
+  let articles = rawArticles.value
+  
+  // 模块筛选
+  if (selectedModule.value) {
+    articles = articles.filter(article => article.module === selectedModule.value)
   }
-  return rawArticles.value.filter(article => 
-    Array.isArray(article.tags) && article.tags.includes(selectedTag.value)
-  )
+  
+  // 标签筛选
+  if (selectedTag.value) {
+    articles = articles.filter(article => 
+      Array.isArray(article.tags) && article.tags.includes(selectedTag.value)
+    )
+  }
+  
+  return articles
 })
 
 // 监听路由变化，切换栏目时重置筛选
 watch(() => route.params.category, () => {
   selectedTag.value = null
+  selectedModule.value = null
 })
 
 // 判断是否为文章详情页或单页

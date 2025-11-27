@@ -41,9 +41,25 @@ npm run dev
 
 ## 📦 部署指南 (GitHub Pages)
 
-本项目可以直接部署到 GitHub Pages。
+本项目已配置自动化部署脚本 `deploy.ps1`，方便 Windows 用户快速部署。
 
-### 重要配置：Base URL
+### 前置条件
+
+1.  确保你已经安装了 Git 和 Node.js。
+2.  确保你已经将代码关联到 GitHub 仓库。
+
+### 部署步骤
+
+1.  在终端运行部署脚本：
+    ```powershell
+    ./deploy.ps1
+    ```
+2.  脚本会自动执行以下操作：
+    *   构建项目 (`npm run build`)
+    *   初始化 `dist` 目录为 git 仓库
+    *   强制推送到远程仓库的 `gh-pages` 分支
+
+### 手动配置 Base URL
 
 如果你的博客部署在非根目录下（例如 `https://username.github.io/repo-name/`），你需要修改 `vite.config.js` 中的 `base` 配置：
 
@@ -54,81 +70,7 @@ export default defineConfig({
   // ...
 })
 ```
-本项目已默认配置为 `/XiaJie.github.io/`，请根据实际情况修改。
-
-### 方法一：手动部署 (推荐初学者)
-
-1.  **构建项目**：
-    在终端运行以下命令，这将生成 `dist` 文件夹：
-    ```bash
-    npm run build
-    ```
-
-2.  **推送到 GitHub**：
-    确保你已经将代码推送到你的 GitHub 仓库（通常是 `username.github.io`）。
-
-3.  **使用 gh-pages 分支**：
-    你可以使用 `git subtree` 将 `dist` 文件夹的内容推送到 `gh-pages` 分支：
-    ```bash
-    git add dist -f
-    git commit -m "deploy: build pages"
-    git subtree push --prefix dist origin gh-pages
-    ```
-    或者，如果你的仓库就是 `username.github.io`，通常你需要将 `dist` 内容推送到 `main` 或 `master` 分支（取决于你的 GitHub Pages 设置）。如果这是你的个人主页仓库，你需要将构建后的内容放在根目录。
-    
-    **更简单的做法 (使用 gh-pages 包)**:
-    1. 安装 `gh-pages`: `npm install gh-pages --save-dev`
-    2. 在 `package.json` 的 `scripts` 中添加: `"deploy": "gh-pages -d dist"`
-    3. 运行 `npm run build` 然后 `npm run deploy`。
-
-### 方法二：使用 GitHub Actions 自动部署 (推荐)
-
-在你的仓库中创建文件 `.github/workflows/deploy.yml`，内容如下：
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [ main ]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install and Build
-        run: |
-          npm install
-          npm run build
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: ./dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
-```
-
-提交此文件后，每次 push 到 main 分支，GitHub Actions 就会自动构建并部署你的博客。
+本项目已默认配置为 `/XiaJie.github.io/`。
 
 ## ⚙️ 网站配置
 
@@ -137,19 +79,19 @@ jobs:
 ```yaml
 # 示例配置
 site:
-  title: Pixel Blog
-  description: A retro pixel art style blog
-  author: Pixel Gamer
+  title: 丑兔子的个人博客
+  description: 基于 Vue 3 构建的像素风格博客
+  author: 欢迎来到丑兔子的个人博客
   # logo: P # 默认文字 Logo
 
 # 自定义图片配置
 images:
   # 首页欢迎区域的动态方块图片 (可选)，默认显示文字
-  # 建议将图片放在 public/assets 目录下，引用路径如 /assets/hero.png
-  # 系统会自动根据部署路径处理 Base URL，无需手动添加仓库名前缀
-  homeHero: /assets/other5.png 
+  # 建议将图片放在 public/assets 目录下，引用路径如 assets/hero.png
+  # 系统会自动根据部署路径处理 Base URL
+  homeHero: assets/other5.png 
   # 左上角浮动 Logo 图片 (可选)，默认显示文字 Logo
-  logo: /assets/other5.png
+  logo: assets/other5.png
 
 features:
   musicPlayer: true # 开启音乐播放器
@@ -160,13 +102,23 @@ features:
 
 # 社交链接 (显示在页脚)
 social:
-  github: https://github.com/yourusername
-  bilibili: https://bilibili.com
+  github: https://github.com/xiajie321
+  bilibili: https://space.bilibili.com/1289464475
   # twitter: https://twitter.com 
 
+# 评论系统配置 (Giscus)
 giscus:
-  repo: your-user/your-repo
-  # ...其他 Giscus 配置
+  repo: xiajie321/XiaJie.github.io
+  repoId: R_kgDOQdDIYw
+  category: General
+  categoryId: DIC_kwDOQdDIY84CzHvt
+  mapping: pathname
+  strict: 0
+  reactionsEnabled: 1
+  emitMetadata: 0
+  inputPosition: top
+  theme: preferred_color_scheme
+  lang: zh-CN
 ```
 
 ## 📝 内容管理指南
@@ -221,7 +173,7 @@ tags: [Vue, Pixel, Game]
     ```
     系统已配置为忽略 `Image` 文件夹，所以它不会出现在导航栏中。
 
-*   **静态资源 (Logo/Hero)**：对于 `config.yaml` 中配置的全局图片（如 Logo、首页大图），建议将图片文件放入项目根目录下的 `public/assets` 文件夹中，并使用绝对路径引用（例如 `/assets/logo.png`）。系统会自动根据部署环境处理路径前缀。
+*   **静态资源 (Logo/Hero)**：对于 `config.yaml` 中配置的全局图片（如 Logo、首页大图），建议将图片文件放入项目根目录下的 `public/assets` 文件夹中，并使用路径 `assets/logo.png` 引用（无需斜杠开头，系统会自动处理）。
 
 ## 🎨 自定义与修改
 
