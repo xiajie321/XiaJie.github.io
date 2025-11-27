@@ -257,12 +257,12 @@
                 :to="{ path: getArticleLink(article), query: { path: article.path } }"
                 class="group block hover:translate-x-1 transition-transform"
               >
-                <div class="text-xs font-bold text-gray-800 group-hover:text-pixel-primary truncate">
+                <div class="text-xs font-bold text-gray-800 dark:text-gray-200 group-hover:text-pixel-primary transition-colors truncate">
                   {{ article.title || '无标题' }}
                 </div>
-                <div class="text-[10px] text-gray-500 font-pixel mt-1 flex justify-between">
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 font-pixel mt-1 flex justify-between">
                   <span>{{ formatDate(article.date) }}</span>
-                  <span class="bg-gray-200 px-1 rounded">{{ article.category }}</span>
+                  <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded transition-colors">{{ article.category }}</span>
                 </div>
               </router-link>
             </li>
