@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-pixel-bg text-pixel-dark font-sans;
+  image-rendering: pixelated;
+  /* 自定义光标：Link 正常状态 */
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%234ade80" d="M4 4h16v16H4z"/><path fill="%23166534" d="M4 4h16v4H4z"/><path fill="black" d="M8 12h2v2H8zM14 12h2v2h-2z"/><path fill="none" stroke="black" stroke-width="2" d="M0 0h24v24H0z"/></svg>') 12 12, auto;
+}
+
+body:active {
+  /* 自定义光标：Link 点击状态 (嘴巴张开) */
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%234ade80" d="M4 4h16v16H4z"/><path fill="%23166534" d="M4 4h16v4H4z"/><path fill="black" d="M8 12h2v2H8zM14 12h2v2h-2zM10 16h4v2h-4z"/><path fill="none" stroke="black" stroke-width="2" d="M0 0h24v24H0z"/></svg>') 12 12, auto;
+}
+
+/* 任天堂配色变量 */
+:root {
+  --nintendo-red: #e70012;
+  --mario-red: #ff0000;
+  --luigi-green: #00aa00;
+  --zelda-gold: #fcd116;
+  --link-green: #00aa00;
+  --pokemon-blue: #0075be;
+  --pokemon-yellow: #ffcb05;
+}
+
+/* 主题背景过渡 */
+.bg-transition {
+  transition: background-color 0.8s ease, color 0.5s ease;
+}
+
+/* 主题定义 */
+.theme-home {
+  background-color: #87CEEB; /* 天空蓝 */
+}
+.theme-articles {
+  background-color: #1a1a2e; /* 深夜蓝 */
+}
+.theme-about {
+  background-color: #5d4037; /* 砖块棕 */
+  color: #f5f5f5;
+}
+.theme-default {
+  background-color: #f0f4f8;
+}
+
+/* 像素边框工具类 */
+.pixel-border {
+  box-shadow: 
+    -4px 0 0 0 #2d3436,
+    4px 0 0 0 #2d3436,
+    0 -4px 0 0 #2d3436,
+    0 4px 0 0 #2d3436;
+  margin: 4px;
+}
+
+.pixel-border-sm {
+  box-shadow: 
+    -2px 0 0 0 #2d3436,
+    2px 0 0 0 #2d3436,
+    0 -2px 0 0 #2d3436,
+    0 2px 0 0 #2d3436;
+  margin: 2px;
+}
+
+/* 像素按钮 */
+.pixel-btn {
+  @apply px-4 py-2 font-pixel text-xs cursor-pointer transition-transform active:scale-95 select-none;
+  box-shadow: 
+    -4px 0 0 0 #2d3436,
+    4px 0 0 0 #2d3436,
+    0 -4px 0 0 #2d3436,
+    0 4px 0 0 #2d3436,
+    4px 4px 0 0 rgba(0,0,0,0.2);
+}
+
+.pixel-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    -4px 0 0 0 #2d3436,
+    4px 0 0 0 #2d3436,
+    0 -4px 0 0 #2d3436,
+    0 4px 0 0 #2d3436,
+    4px 6px 0 0 rgba(0,0,0,0.2);
+}
+
+/* Markdown 样式 */
+.markdown-body h1 {
+  @apply text-3xl font-bold mb-6 mt-8 font-pixel;
+}
+.markdown-body h2 {
+  @apply text-2xl font-bold mb-4 mt-6 font-pixel;
+}
+.markdown-body p {
+  @apply mb-4 leading-relaxed;
+}
+.markdown-body ul {
+  @apply list-disc list-inside mb-4;
+}
+.markdown-body code {
+  @apply bg-gray-200 px-1 py-0.5 rounded font-mono text-sm;
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.markdown-body pre {
+  @apply bg-gray-800 text-white p-4 rounded mb-4 overflow-x-auto pixel-border-sm;
+}
+.markdown-body a {
+  @apply text-pixel-primary hover:underline;
+}
+
+/* 页面切换动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translate(30px, 0);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translate(-30px, 0);
+}
+
+/* 文章切换动画 */
+.article-switch-enter-active,
+.article-switch-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.article-switch-enter-from {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+.article-switch-leave-to {
+  opacity: 0;
+  transform: scale(1.05) translateY(-10px);
+}
+
+/* 装饰元素动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 5s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-bounce-slow {
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+/* 像素云朵 */
+.pixel-cloud {
+  width: 40px;
+  height: 10px;
+  background: #fff;
+  box-shadow: 
+    20px 0 0 0 #fff,
+    -20px 0 0 0 #fff,
+    0 -10px 0 0 #fff,
+    0 10px 0 0 #fff,
+    10px -10px 0 0 #fff,
+    -10px -10px 0 0 #fff,
+    20px 10px 0 0 #fff,
+    -20px 10px 0 0 #fff,
+    30px 0 0 0 #fff,
+    -30px 0 0 0 #fff;
+  margin: 20px;
+}
+
+@keyframes cloud-move {
+  0% { transform: translateX(0) scale(var(--scale, 1)); }
+  100% { transform: translateX(100vw) scale(var(--scale, 1)); }
+}
+
+.animate-cloud-1 {
+  animation: cloud-move 60s linear infinite;
+  --scale: 1;
+}
+
+.animate-cloud-2 {
+  animation: cloud-move 90s linear infinite;
+  animation-delay: -20s;
+  --scale: 0.75;
+}
+
+.animate-cloud-3 {
+  animation: cloud-move 120s linear infinite;
+  animation-delay: -50s;
+  --scale: 0.5;
+}
+
+/* 像素星星 */
+.pixel-star {
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 4px #fff;
+  position: absolute;
+  animation: twinkle 2s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 挤压拉伸弹跳动画 */
+@keyframes squash-bounce {
+  0% { transform: scale(1, 1) translateY(0); }
+  10% { transform: scale(1.2, 0.8) translateY(0); }
+  30% { transform: scale(0.8, 1.2) translateY(-40px); }
+  50% { transform: scale(1.05, 0.95) translateY(0); }
+  57% { transform: scale(1, 1) translateY(-10px); }
+  64% { transform: scale(1, 1) translateY(0); }
+  100% { transform: scale(1, 1) translateY(0); }
+}
+
+.animate-squash-bounce {
+  animation: squash-bounce 1.5s infinite;
+  transform-origin: bottom;
+}
+
+/* 文字描边工具类 (提升对比度) */
+.text-stroke {
+  text-shadow: 
+    -1px -1px 0 #fff,  
+     1px -1px 0 #fff,
+    -1px  1px 0 #fff,
+     1px  1px 0 #fff;
+}
+
+.dark .text-stroke {
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+}
+
+/* Dark Mode Overrides */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark .theme-home {
+  background-color: #0f172a; /* Darker Blue */
+}
+
+.dark .theme-articles {
+  background-color: #0a0a12; /* Very Dark Blue */
+  color: #e0e0e0;
+}
+
+.dark .theme-about {
+  background-color: #3e2723; /* Darker Brown */
+  color: #f5f5f5;
+}
+
+.dark .theme-default {
+  background-color: #111827;
+}
+
+.dark .pixel-border, 
+.dark .pixel-btn,
+.dark .pixel-cloud {
+  box-shadow: 
+    -4px 0 0 0 #000,
+    4px 0 0 0 #000,
+    0 -4px 0 0 #000,
+    0 4px 0 0 #000;
+}
+
+.dark .pixel-btn {
+  @apply bg-gray-800 text-gray-200;
+}
+
+.dark .pixel-btn:hover {
+  @apply bg-gray-700;
+}
+
+.dark .markdown-body {
+  @apply text-gray-300;
+}
+
+.dark .markdown-body h1,
+.dark .markdown-body h2,
+.dark .markdown-body h3,
+.dark .markdown-body strong {
+  @apply text-gray-100;
+}
+
+.dark .markdown-body pre {
+  @apply bg-black border border-gray-700;
+}
+
+.dark .markdown-body code {
+  @apply bg-gray-700 text-gray-200;
+}
+
+.dark .markdown-body a {
+  @apply text-blue-400;
+}

@@ -1,0 +1,50 @@
+# 网站全局配置
+
+# 网站基本信息
+site:
+  title: 像素博客
+  description: 基于 Vue 3 构建的复古像素风格博客
+  author: 像素玩家
+  # logo: P # 默认文字 Logo，如果配置了 images.logo 则优先使用图片
+
+# 自定义图片配置
+images:
+  # 首页欢迎区域的动态方块图片 (可选)
+  homeHero: assets/other5.png
+  # 左上角浮动 Logo 图片 (可选)
+  logo: assets/other5.png
+
+# 功能开关
+features:
+  musicPlayer: true
+  darkMode: true
+  search: true
+  comments: true
+  toc: true # 文章目录
+
+# 社交链接 (显示在页脚)
+# 如果留空则不显示对应按钮
+social:
+  github: https://github.com/xiajie321
+  bilibili: https://bilibili.com
+  # twitter: https://twitter.com 
+
+# 评论系统配置 (Giscus)
+giscus:
+  repo: xiajie321/XiaJie.github.io
+  repoId: R_kgDOKvxw_Q
+  category: General
+  categoryId: DIC_kwDOKvxw_c4CbQ3u
+  mapping: pathname
+  strict: 0
+  reactionsEnabled: 1
+  emitMetadata: 0
+  inputPosition: top
+  theme: preferred_color_scheme
+  lang: zh-CN
+
+# 外观配置
+appearance:
+  primaryColor: '#4ade80' # 像素绿
+  secondaryColor: '#fcd116' # 像素黄
+  accentColor: '#e70012' # 像素红
