@@ -173,7 +173,8 @@
         <!-- 评论组件 -->
         <Comment 
           v-if="isArticlePage && blogStore.siteConfig.features?.comments" 
-          :key="selectedArticle?.path || route.path"
+          :key="selectedArticle?.path || route.fullPath"
+          :path="selectedArticle?.path || route.fullPath"
         />
       </div>
 
