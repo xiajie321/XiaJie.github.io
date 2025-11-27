@@ -224,6 +224,18 @@
         @mouseenter="isTocHovered = true"
         @mouseleave="isTocHovered = false"
       >
+        <!-- 快速跳转评论区 (独立块，仅在有内容时显示) -->
+        <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
+          <a 
+            href="#comments-section"
+            class="block transition-colors text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-pixel-secondary flex items-center justify-center gap-2"
+            @click.prevent="scrollToHeading('comments-section')"
+          >
+            <span class="text-lg animate-bounce">💬</span> 
+            <span class="text-pixel-secondary font-pixel">跳转至评论区</span>
+          </a>
+        </div>
+
         <!-- 文章目录 (仅当有 currentToc 时显示) -->
         <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
           <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -249,17 +261,6 @@
               </a>
             </li>
           </ul>
-          
-          <!-- 快速跳转评论区 -->
-          <div class="mt-4 pt-4 border-t-2 border-gray-100 dark:border-gray-700">
-            <a 
-              href="#comments-section"
-              class="block transition-colors text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-pixel-secondary flex items-center gap-2"
-              @click.prevent="scrollToHeading('comments-section')"
-            >
-              <span class="text-lg">💬</span> 跳转至评论区
-            </a>
-          </div>
         </div>
 
         <!-- 最近更新 (始终显示) -->
