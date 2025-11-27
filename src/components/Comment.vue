@@ -5,11 +5,12 @@
 </template>
 
 <script setup>
-import { onMounted, watch, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useBlogStore } from '../stores/blog'
 
 const blogStore = useBlogStore()
 const giscusContainer = ref(null)
+let observer = null
 
 const giscusConfig = computed(() => blogStore.siteConfig.giscus || {})
 
@@ -39,22 +40,41 @@ const loadGiscus = () => {
   }
 }
 
-onMounted(() => {
-  loadGiscus()
-})
-
-// Watch for theme changes to reload Giscus with correct theme
-watch(() => document.documentElement.classList.contains('dark'), () => {
-  // We need to send a message to the iframe to update the theme instead of reloading
+const updateGiscusTheme = (theme) => {
   const iframe = document.querySelector('iframe.giscus-frame')
   if (!iframe) return
   iframe.contentWindow.postMessage({
     giscus: {
       setConfig: {
-        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+        theme: theme
       }
     }
   }, 'https://giscus.app')
+}
+
+onMounted(() => {
+  loadGiscus()
+
+  // 使用 MutationObserver 监听 html class 变化
+  observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        const isDark = document.documentElement.classList.contains('dark')
+        updateGiscusTheme(isDark ? 'dark' : 'light')
+      }
+    })
+  })
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
 })
 </script>
 
