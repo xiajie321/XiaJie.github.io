@@ -106,12 +106,17 @@ export const useBlogStore = defineStore('blog', {
               module: modulePath // 添加模块信息
             })
           } else {
-             this.articles[category].push({
-              content,
-              path,
-              category: category,
-              module: modulePath // 添加模块信息
-            })
+            // 如果没有匹配到 frontmatter
+            // 对于 Articles 目录，我们忽略没有 frontmatter 的文件（修复之前的 bug）
+            // 对于其他目录（如 Home, About），允许没有 frontmatter 的文件
+            if (category !== 'Articles') {
+              this.articles[category].push({
+                content,
+                path,
+                category: category,
+                module: modulePath
+              })
+            }
           }
         }
       

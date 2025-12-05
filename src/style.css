@@ -100,25 +100,57 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Markdown 样式 */
 .markdown-body h1 {
-  @apply text-3xl font-bold mb-6 mt-8 font-pixel;
+  @apply text-3xl font-bold mb-8 mt-12 font-pixel border-b-4 border-gray-200 pb-4;
 }
 .markdown-body h2 {
-  @apply text-2xl font-bold mb-4 mt-6 font-pixel;
+  @apply text-2xl font-bold mb-6 mt-10 font-pixel border-b-2 border-gray-100 pb-2;
+}
+.markdown-body h3 {
+  @apply text-xl font-bold mb-4 mt-8 font-pixel;
+}
+.markdown-body h4 {
+  @apply text-lg font-bold mb-3 mt-6 font-pixel;
 }
 .markdown-body p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-6 leading-relaxed text-lg;
+}
+.markdown-body ul, .markdown-body ol {
+  @apply mb-6 pl-6 space-y-2;
 }
 .markdown-body ul {
-  @apply list-disc list-inside mb-4;
+  @apply list-disc;
+}
+.markdown-body ol {
+  @apply list-decimal;
+}
+.markdown-body li {
+  @apply leading-relaxed;
 }
 .markdown-body code {
-  @apply bg-gray-200 px-1 py-0.5 rounded font-mono text-sm;
+  @apply bg-gray-100 px-1.5 py-0.5 rounded font-mono text-sm text-red-500 border border-gray-200 mx-1;
 }
 .markdown-body pre code {
-  @apply bg-transparent p-0 text-inherit;
+  @apply bg-transparent p-0 text-inherit border-none mx-0 text-gray-100;
 }
 .markdown-body pre {
-  @apply bg-gray-800 text-white p-4 rounded mb-4 overflow-x-auto pixel-border-sm;
+  @apply bg-[#1e1e1e] text-gray-100 p-6 rounded-lg mb-8 mt-4 overflow-x-auto shadow-lg border border-gray-700;
+  font-family: 'Fira Code', monospace;
+  line-height: 1.6;
+}
+.markdown-body blockquote {
+  @apply border-l-4 border-blue-500 bg-blue-50 p-4 my-6 rounded-r text-gray-700 italic;
+}
+.markdown-body img {
+  @apply rounded-lg shadow-md my-6 max-w-full h-auto border border-gray-200;
+}
+.markdown-body table {
+  @apply w-full border-collapse mb-6;
+}
+.markdown-body th, .markdown-body td {
+  @apply border border-gray-300 p-3 text-left;
+}
+.markdown-body th {
+  @apply bg-gray-100 font-bold;
 }
 .markdown-body a {
   @apply text-pixel-primary hover:underline;

@@ -1,7 +1,7 @@
 o<template>
   <div class="min-h-screen flex flex-col font-sans bg-transition" :class="themeClass">
     <!-- 像素风格导航栏 -->
-    <header class="bg-white/90 dark:bg-gray-900/90 dark:border-gray-700 backdrop-blur border-b-4 border-pixel-dark p-4 sticky top-0 z-50 transition-colors duration-300 text-gray-900 dark:text-gray-100">
+    <header class="bg-white/95 dark:bg-gray-900/95 dark:border-gray-700 border-b-4 border-pixel-dark p-4 sticky top-0 z-50 transition-colors duration-300 text-gray-900 dark:text-gray-100">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex items-center gap-4">
           <!-- Logo 图片或文字 -->
@@ -295,7 +295,7 @@ o<template>
 
       <!-- 主要内容容器 -->
       <!-- 添加 text-gray-900 dark:text-gray-100 以强制文字颜色，解决 Light Mode 下 Articles 主题文字看不清的问题 -->
-      <div class="flex-grow w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-6 min-h-[60vh] relative z-10 transition-all duration-300 text-gray-900 dark:text-gray-100">
+      <div class="flex-grow w-full bg-white/95 dark:bg-gray-900/95 pixel-border p-6 min-h-[60vh] relative z-10 transition-all duration-300 text-gray-900 dark:text-gray-100">
         <!-- 装饰性像素元素 -->
         <div class="absolute top-2 right-2 w-4 h-4 bg-pixel-secondary opacity-50"></div>
         <div class="absolute bottom-2 left-2 w-4 h-4 bg-pixel-primary opacity-50"></div>
@@ -310,7 +310,7 @@ o<template>
       <!-- 右侧侧边栏：TOC 和 最近更新 -->
       <aside class="hidden lg:flex flex-col w-72 shrink-0 sticky top-24 max-h-[calc(100vh-10rem)] gap-4 px-4 pt-4 pb-8">
         <!-- 快速跳转评论区 (独立块，固定在顶部) -->
-        <div v-if="blogStore.currentToc.length > 0" class="shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
+        <div v-if="blogStore.currentToc.length > 0" class="shrink-0 bg-white/95 dark:bg-gray-900/95 pixel-border p-4 text-gray-900 dark:text-gray-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer" @click="scrollToHeading('comments-section')">
           <a 
             href="#comments-section"
             class="block transition-colors text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-pixel-secondary flex items-center justify-center gap-2"
@@ -329,7 +329,7 @@ o<template>
           @mouseleave="isTocHovered = false"
         >
           <!-- 文章目录 (仅当有 currentToc 时显示) -->
-          <div v-if="blogStore.currentToc.length > 0" class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 text-gray-900 dark:text-gray-100">
+          <div v-if="blogStore.currentToc.length > 0" class="bg-white/95 dark:bg-gray-900/95 pixel-border p-4 text-gray-900 dark:text-gray-100">
             <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <span class="text-pixel-primary">📑</span> 目录
             </h3>
@@ -357,7 +357,7 @@ o<template>
         </div>
 
         <!-- 最近更新 (固定在底部) -->
-        <div class="shrink-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm pixel-border p-4 pb-6 text-gray-900 dark:text-gray-100">
+        <div class="shrink-0 bg-white/95 dark:bg-gray-900/95 pixel-border p-4 pb-6 text-gray-900 dark:text-gray-100">
           <h3 class="font-pixel text-sm mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
             <span class="text-pixel-primary">★</span> 最近更新
           </h3>
@@ -562,43 +562,30 @@ const createParticle = (x, y) => {
   if (!particleContainer.value) return
   
   const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#ff9ff3', '#54a0ff']
-  const particleCount = 8
+  const particleCount = 6 // 减少粒子数量
   
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div')
-    particle.classList.add('absolute', 'w-2', 'h-2')
+    particle.classList.add('absolute', 'w-2', 'h-2', 'animate-particle-fade')
     particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
     particle.style.left = `${x}px`
     particle.style.top = `${y}px`
     
-    // Random velocity
+    // Random direction for CSS transform
     const angle = Math.random() * Math.PI * 2
-    const velocity = 2 + Math.random() * 4
-    const vx = Math.cos(angle) * velocity
-    const vy = Math.sin(angle) * velocity
+    const distance = 50 + Math.random() * 50
+    const tx = Math.cos(angle) * distance
+    const ty = Math.sin(angle) * distance
+    
+    particle.style.setProperty('--tx', `${tx}px`)
+    particle.style.setProperty('--ty', `${ty}px`)
     
     particleContainer.value.appendChild(particle)
     
-    let opacity = 1
-    let posX = x
-    let posY = y
-    
-    const animate = () => {
-      opacity -= 0.05
-      posX += vx
-      posY += vy
-      
-      particle.style.opacity = opacity
-      particle.style.transform = `translate(${posX - x}px, ${posY - y}px)`
-      
-      if (opacity > 0) {
-        requestAnimationFrame(animate)
-      } else {
-        particle.remove()
-      }
-    }
-    
-    requestAnimationFrame(animate)
+    // 动画结束后移除
+    particle.addEventListener('animationend', () => {
+      particle.remove()
+    })
   }
 }
 
@@ -694,5 +681,20 @@ const scrollToHeading = (id) => {
 
 .animate-bounce-fast {
   animation: bounce-fast 0.2s infinite;
+}
+
+@keyframes particle-fade {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty));
+  }
+}
+
+.animate-particle-fade {
+  animation: particle-fade 0.6s ease-out forwards;
 }
 </style>

@@ -101,17 +101,8 @@
       <div v-else class="max-w-3xl mx-auto relative" :key="selectedArticle?.path || 'detail'">
         <!-- 首页 Hero 区域 -->
         <div v-if="currentConfig?.type === 'home' && !selectedArticle" class="mb-12 text-center relative">
-          <!-- 粒子容器 -->
-          <div class="absolute inset-0 pointer-events-none overflow-visible flex justify-center items-center">
-             <div v-for="p in particles" :key="p.id" 
-                  class="absolute w-2 h-2 bg-orange-500 rounded-sm"
-                  :style="{
-                    transform: `translate(${p.x}px, ${p.y}px) rotate(${p.r}deg)`,
-                    opacity: p.life,
-                    backgroundColor: p.color
-                  }"
-             ></div>
-          </div>
+          <!-- 粒子容器 (使用 ref 直接操作 DOM) -->
+          <div ref="heroParticleContainer" class="absolute inset-0 pointer-events-none overflow-visible flex justify-center items-center z-10"></div>
 
           <div 
             class="inline-block w-24 h-24 bg-pixel-primary pixel-border mb-4 relative overflow-hidden cursor-pointer select-none transition-colors duration-200"
@@ -276,9 +267,8 @@ const listScrollTop = ref(0)
 const isJumping = ref(false)
 const animationKey = ref(0)
 const heatLevel = ref(0)
-const particles = ref([])
+const heroParticleContainer = ref(null)
 let heatDecayTimer = null
-let particleIdCounter = 0
 
 const handleHeroClick = () => {
   isJumping.value = true
@@ -308,44 +298,31 @@ const decreaseHeat = () => {
 }
 
 const spawnParticles = () => {
-  const count = 5 + Math.floor(Math.random() * 5)
+  if (!heroParticleContainer.value) return
+  
+  const count = 6
   for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2
-    const speed = 2 + Math.random() * 4
-    const color = Math.random() > 0.5 ? '#ff4500' : '#ff8c00' // 红橙色
+    const particle = document.createElement('div')
+    particle.classList.add('absolute', 'w-2', 'h-2', 'rounded-sm', 'animate-hero-particle')
     
-    particles.value.push({
-      id: particleIdCounter++,
-      x: 0,
-      y: 0,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 5, // 向上倾向
-      r: Math.random() * 360,
-      life: 1.0,
-      color
+    const color = Math.random() > 0.5 ? '#ff4500' : '#ff8c00'
+    particle.style.backgroundColor = color
+    
+    // 随机方向
+    const angle = Math.random() * Math.PI * 2
+    const dist = 60 + Math.random() * 40
+    
+    const tx = Math.cos(angle) * dist
+    const ty = Math.sin(angle) * dist
+    
+    particle.style.setProperty('--tx', `${tx}px`)
+    particle.style.setProperty('--ty', `${ty}px`)
+    
+    heroParticleContainer.value.appendChild(particle)
+    
+    particle.addEventListener('animationend', () => {
+      particle.remove()
     })
-  }
-  
-  if (particles.value.length === count) { // 第一次添加时启动循环
-    updateParticles()
-  }
-}
-
-const updateParticles = () => {
-  if (particles.value.length === 0) return
-  
-  particles.value = particles.value.filter(p => p.life > 0)
-  
-  particles.value.forEach(p => {
-    p.x += p.vx
-    p.y += p.vy
-    p.vy += 0.2 // 重力
-    p.life -= 0.05
-    p.r += 10
-  })
-  
-  if (particles.value.length > 0) {
-    requestAnimationFrame(updateParticles)
   }
 }
 
@@ -887,5 +864,20 @@ const getRandomIcon = (index) => {
 .animate-squash-bounce {
   animation: squash-bounce 2s infinite ease-in-out;
   transform-origin: bottom center;
+}
+
+@keyframes hero-particle {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) rotate(360deg);
+  }
+}
+
+.animate-hero-particle {
+  animation: hero-particle 0.8s ease-out forwards;
 }
 </style>
