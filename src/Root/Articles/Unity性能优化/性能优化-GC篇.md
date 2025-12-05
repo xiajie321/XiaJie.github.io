@@ -1,274 +1,296 @@
 ---
-title: 性能优化 GC篇
+title: 性能优化-GC篇
 date: 2025-12-05
-tags: [Unity,技术,性能优化]
-
----
-# Unity 性能优化 - GC (垃圾回收) 篇
-
-> 💡 **核心理念**：最好的 GC 优化就是**不产生垃圾**。
-
-## 一、数据类型核心特性：一切的起点
-
-在 C# 中，理解**值类型**和**引用类型**的区别是理解内存管理的第一步。
-
-### 1.1 值类型 (Value Type)
-
-* **本质**：直接存储数据本身。
-* **存储位置**：通常在**栈 (Stack)** 上（除非它是类的一个字段）。
-* **比喻**：就像你手中的**现金**。给你 100 块钱，就是真的把钱给你了。如果你花了，不影响我口袋里的钱。
-* **常见类型**：`int`, `float`, `bool`, `struct` (如 `Vector3`), `enum`。
-
-```csharp
-// 值类型示例
-int a = 10;
-int b = a; // 复制了一份数据
-b = 20;    // 修改 b 不会影响 a
-// 结果：a = 10, b = 20
-```
-
-### 1.2 引用类型 (Reference Type)
-
-* **本质**：存储数据的**内存地址**（引用）。
-* **存储位置**：数据存储在**托管堆 (Managed Heap)** 上，栈上只存一个指向堆的地址。
-* **比喻**：就像**电视遥控器**。我把遥控器给你（复制引用），我们控制的是同一台电视（堆上的对象）。你换台，我也跟着看新台。
-* **常见类型**：`class`, `string`, `array`, `delegate`, `interface`。
-
-```csharp
-// 引用类型示例
-class Player { public int hp; }
-
-Player p1 = new Player();
-p1.hp = 100;
-Player p2 = p1; // 复制了引用（遥控器）
-p2.hp = 50;     // 修改 p2 指向的对象
-// 结果：p1.hp 也是 50，因为它们指向同一个对象
-```
-
+tags: [Unity, 性能优化, GC]
 ---
 
-## 二、内存模型基础认知
+# 性能优化-GC篇
 
-### 2.1 内存区域划分
+在Unity开发中，垃圾回收（Garbage Collection，简称GC）是性能优化中不可忽视的一环。GC引起的卡顿（Spike）往往是造成游戏帧率不稳定的主要原因之一。本文将深入剖析GC的原理，并提供实用的优化策略。
 
-我们可以把内存想象成一个**大仓库**，分成了不同的区域：
+# 一、数据类型特性
 
-#### 1. 栈 (Stack) —— "整齐的盘子堆"
+理解C#中的数据类型是理解内存管理的基础。C#的数据类型主要分为两大类：**值类型**和**引用类型**。
 
-* **特点**：先进后出，存取速度极快。
-* **管理**：自动管理。函数调用结束，局部变量自动弹出销毁。
-* **存放**：局部变量（值类型）、参数。
+### 值类型 (Value Types)
+*   **定义**：变量直接包含其数据。
+*   **存储位置**：通常分配在**栈（Stack）**上（除非它是类的一个字段，此时随类存储在堆上）。
+*   **特点**：
+    *   分配和释放速度非常快。
+    *   生命周期随作用域结束而结束，**不需要GC管理**。
+    *   赋值时进行数据复制。
+*   **常见类型**：`int`, `float`, `bool`, `struct` (如 `Vector3`, `Quaternion`), `enum`。
 
-#### 2. 托管堆 (Managed Heap) —— "随意的杂物间"
-
-* **特点**：空间大，但分配和回收需要时间。
-* **管理**：由 **GC (垃圾回收器)** 管理。
-* **存放**：引用类型的实例（对象本身）。
-
-#### 3. 原生堆 (Native Heap)
-
-* **特点**：Unity 底层（C++）使用的内存。
-* **管理**：手动管理（需要显式释放），如 `Texture2D`, `Mesh` 等资源。
+### 引用类型 (Reference Types)
+*   **定义**：变量存储的是指向数据的**内存地址（引用）**，实际数据存储在堆上。
+*   **存储位置**：实际对象分配在**托管堆（Managed Heap）**上，栈上只存储引用地址。
+*   **特点**：
+    *   分配需要从堆中寻找合适内存块，速度较慢。
+    *   由**GC负责回收**。
+    *   赋值时复制的是引用地址，多个变量可能指向同一个对象。
+*   **常见类型**：`class`, `string`, `array`, `delegate`, `interface`。
 
 ```mermaid
 graph TD
-    subgraph Memory [内存空间]
-        Stack[栈 (Stack)<br>存取快，自动清理<br>存放：int, float, struct]
-        Heap[托管堆 (Managed Heap)<br>存取慢，GC清理<br>存放：class实例, string]
+    subgraph Stack [栈内存 (Stack)]
+        A[int a = 10]
+        B[Vector3 pos]
+        C[ref ptr -> Heap]
     end
-    Stack -->|引用| Heap
+    subgraph Heap [托管堆 (Managed Heap)]
+        O[Class Object {Data...}]
+    end
+    C --> O
+    style Stack fill:#f9f,stroke:#333,stroke-width:2px
+    style Heap fill:#ccf,stroke:#333,stroke-width:2px
 ```
 
-### 2.2 关键问题：内存碎片
+# 二、内存基础概念
 
-**什么是内存碎片？**
-想象一个停车场。车子（对象）来了又走。
+## 2.1 内存区域划分
 
-* **理想情况**：车子紧挨着停。
-* **碎片情况**：车子乱停，中间空出很多小车位。
-* **后果**：虽然总空位够停一辆大卡车，但没有**连续**的空位，导致大卡车停不进来。
+在Unity应用运行过程中，内存主要被划分为三个区域：
 
-**在 Unity 中**：如果内存碎片过多，即使总内存充足，申请大块内存（如加载大贴图）时也可能失败，甚至触发强制 GC 或崩溃。
+### 1. 栈 (Stack)
+*   **用途**：用于存储局部变量、参数传递和函数调用上下文。
+*   **管理方式**：由CPU自动管理，先进后出（LIFO）。
+*   **性能**：存取速度极快，不会产生内存碎片。
+*   **GC关联**：**与GC无关**。
 
----
+### 2. 托管堆 (Managed Heap)
+*   **用途**：存储所有被分配的引用类型对象（如 `new GameObject()`, `string`, `List<T>`）。
+*   **管理方式**：由Mono/IL2CPP虚拟机的内存管理器管理。
+*   **性能**：分配速度取决于内存碎片的程度，比栈慢。
+*   **GC关联**：**GC的主要工作区域**。当堆内存不足或达到阈值时，触发GC。
 
-## 三、GC 核心原理与性能影响
+### 3. 原生堆 (Native Heap / Unmanaged Heap)
+*   **用途**：存储Unity底层C++引擎使用的资源，如 `Texture` 数据, `Mesh` 顶点数据, `AudioClip` 等。
+*   **管理方式**：需要手动管理或由Unity引擎内部管理。通常通过 `Destroy` 或 `UnloadUnusedAssets` 释放。
+*   **GC关联**：GC不直接管理此区域，但C#层的封装对象（如 `Texture2D` 对象本身）在托管堆，如果C#对象被回收，可能会触发底层资源的引用计数减少。
 
-### 3.1 什么是垃圾回收 (GC)？
+## 2.2 核心内存问题
 
-GC (Garbage Collection) 就是 Unity 的**保洁阿姨**。
-她的工作流程：
+### 什么是内存碎片？
 
-1. **标记**：暂停所有工作（Stop The World），遍历所有对象，看看哪些还在被使用（有引用），哪些没人用了（垃圾）。
-2. **清除**：把没人用的对象占用的内存标记为“可用”。
-3. **压缩**（Unity 的 Boehm GC 默认**不**做这一步，这也是导致碎片的原因）：移动对象，填补空隙。
+内存碎片是指内存中存在大量不连续的空闲小块内存，虽然总的空闲内存足够，但无法分配出一块足够大的连续内存空间。
 
-### 3.2 GC 的性能开销
+**示意图：**
 
-GC 最大的问题是 **Stop The World (STW)**。
-
-* 当 GC 运行时，你的游戏逻辑、渲染都会**完全暂停**。
-* 如果 GC 耗时 100ms，玩家就会感觉到明显的**卡顿**（掉帧）。
-
----
-
-## 四、实战优化：减少 GC 触发的核心策略
-
-**核心口号：不要在 Update 中创建新对象！**
-
-### 4.1 编辑器配置优化：启用增量 GC (Incremental GC)
-
-* **原理**：把一次长时间的打扫（比如 100ms），拆分成多次短时间的打扫（比如 10次 10ms）。
-* **优势**：虽然总耗时可能没变甚至略增，但单帧卡顿感消失了，游戏更流畅。
-* **启用方式**：`Project Settings` -> `Player` -> `Other Settings` -> `Use Incremental GC` (勾选)。
-
-### 4.2 代码层面优化：避坑指南
-
-#### 4.2.1 String：隐形的内存杀手
-
-`string` 是引用类型，且**不可变**。每次拼接都会创建新对象。
-
-❌ **糟糕的写法**：
-
-```csharp
-void Update() {
-    // 每帧都在堆上创建新的字符串对象！
-    scoreText.text = "Score: " + score; 
-}
+```text
+[已占用] [空闲 10MB] [已占用] [空闲 5MB] [已占用] 
 ```
 
-✅ **优化方案**：
+此时如果需要分配一个 **12MB** 的对象，虽然总空闲有 15MB，但因为没有连续的 12MB 空间，分配会失败。
 
-1. 使用 `StringBuilder`（适合复杂拼接）。
-2. 检测值变化才更新。
-3. 使用 `ZString` 等零分配库（进阶）。
+**后果**：
+1.  **触发GC**：系统会尝试通过GC清理内存来腾出空间。
+2.  **堆扩张**：如果GC后仍然不够，Unity会向操作系统申请更多内存，导致应用内存占用变大。
+3.  **分配失败**：极端情况下导致Crash。
 
-```csharp
-StringBuilder sb = new StringBuilder();
-void Update() {
-    if (score != lastScore) {
-        sb.Clear();
-        sb.Append("Score: ");
-        sb.Append(score);
-        scoreText.text = sb.ToString(); // 依然有少量 GC，但比直接拼接好
-        lastScore = score;
+# 三、GC核心认知
+
+## 2.1 什么是GC
+
+GC（Garbage Collection）是自动化内存管理机制。它的核心职责是：
+1.  **查找**：遍历内存中的对象，找出那些不再被引用的“垃圾”对象。
+2.  **回收**：释放这些垃圾对象占用的内存，使其可以被再次利用。
+
+Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental GC** (增量式，新版)。
+
+## 2.2 GC的性能影响
+
+### GC为什么会导致较大的性能开销？
+
+1.  **Stop The World (STW)**：
+    当GC运行时，它通常需要暂停所有的游戏逻辑线程（除了音频等极少数线程）。这是为了防止在分析内存引用关系时，数据还在不断变化。
+    *   如果GC耗时 50ms，那么游戏画面就会卡住 50ms，玩家会感觉到明显的掉帧。
+
+2.  **遍历开销**：
+    GC需要遍历托管堆上的**所有活动对象**来标记引用关系。堆上对象越多，标记过程越慢。
+
+3.  **内存整理（碎片化）**：
+    标准的 Boehm GC **不会**进行内存压缩（Compacting），这意味着它只标记空闲内存，不移动对象。这也是导致内存碎片的主要原因。
+
+# 四、GC优化策略：减少GC触发
+
+优化的核心目标：**减少堆内存分配（Alloc），从而减少GC触发频率和单次GC的耗时。**
+
+## 3.1 编辑器配置优化
+
+### 启用增量GC (Incremental GC)
+
+*   **什么是增量GC**：
+    传统的GC是一次性做完所有工作（标记、清除），导致长时间的卡顿。
+    增量GC将庞大的GC工作**分摊**到多个帧中执行。每一帧只做一点点GC工作，尽量不超出帧预算。
+    *   *比喻*：以前是大扫除，一年搞一次，累死人；现在是每天打扫一点，保持屋子整洁。
+
+*   **配置方法**：
+    `Project Settings` -> `Player` -> `Other Settings` -> 勾选 `Use Incremental GC`。
+
+*   **注意**：增量GC并不会减少总的GC开销，甚至可能因为写屏障（Write Barrier）稍微增加一点总开销，但它能极大地**平滑帧率**，消除峰值卡顿。
+
+## 3.2 代码层面优化：避免频繁创建引用类型
+
+### 3.2.1 常见高频问题场景
+
+#### 1. String 相关问题
+`string` 是不可变的引用类型。任何对字符串的拼接、修改操作都会创建新的字符串对象。
+
+*   **问题代码**：
+    ```csharp
+    void Update() {
+        // ❌ 每帧都会在堆上创建一个新的字符串对象！
+        scoreText.text = "Score: " + score; 
     }
-}
-```
+    ```
 
-#### 4.2.2 闭包与 Lambda 表达式
+#### 2. 闭包问题
+在匿名函数或Lambda表达式中使用外部变量时，编译器会自动生成一个类来持有这些变量，从而产生堆分配。
 
-匿名函数如果捕获了外部变量，会生成临时的类实例。
-
-❌ **糟糕的写法**：
-
-```csharp
-void Start() {
-    int id = 5;
-    // 这里的 Lambda 捕获了局部变量 id，会产生 GC
-    Action myAction = () => Debug.Log(id); 
-    myAction();
-}
-```
-
-#### 4.2.3 装箱 (Boxing)
-
-把值类型转换为引用类型（如 `object` 或接口）时，会在堆上创建一个“箱子”来装这个值。
-
-❌ **糟糕的写法**：
-
-```csharp
-int num = 10;
-object obj = num; // 装箱！产生 GC
-Debug.Log(string.Format("Number: {0}", num)); // Format 内部参数是 object，发生装箱
-```
-
-✅ **优化方案**：
-
-* 使用泛型方法避免装箱。
-* 重写 `ToString()`。
-
-#### 4.2.4 LINQ
-
-LINQ 虽然写起来爽，但很容易产生中间对象和装箱。
-
-❌ **糟糕的写法** (在 Update 中)：
-
-```csharp
-var item = list.Where(x => x.id > 10).FirstOrDefault(); // 产生 GC
-```
-
-✅ **优化方案**：
-
-* 在热点代码（Update）中，使用原生 `for` 或 `foreach` 循环代替 LINQ。
-
-#### 4.2.5 协程 (Coroutine)
-
-`yield return new WaitForSeconds(1f)` 每次都会创建一个新对象。
-
-❌ **糟糕的写法**：
-
-```csharp
-IEnumerator MyCoroutine() {
-    while(true) {
-        yield return new WaitForSeconds(0.1f); // 每 0.1秒 产生垃圾
+*   **问题代码**：
+    ```csharp
+    void Start() {
+        int id = 100;
+        // ❌ 捕获了局部变量 id，产生闭包分配
+        Action action = () => { Debug.Log(id); };
+        action.Invoke();
     }
-}
-```
+    ```
 
-✅ **优化方案**：缓存对象。
+#### 3. 装箱操作 (Boxing)
+将值类型赋值给引用类型（如 `object` 或接口）时，需要将值类型包装成堆上的对象。
 
-```csharp
-WaitForSeconds wait = new WaitForSeconds(0.1f);
-IEnumerator MyCoroutine() {
-    while(true) {
-        yield return wait; // 0 GC
+*   **问题代码**：
+    ```csharp
+    void LogInfo(object info) { ... }
+
+    void Update() {
+        int health = 100;
+        // ❌ int 被装箱为 object，产生GC Alloc
+        LogInfo(health); 
+        
+        // ❌ string.Format 的参数也是 object，导致装箱
+        Debug.Log(string.Format("Health: {0}", health));
     }
-}
-```
+    ```
 
-### 4.2.6 对象池 (Object Pooling)
+#### 4. Action实例化（Lambda表达式）
+即使不捕获变量，将方法作为委托传递时也可能产生分配。
 
-这是解决高频创建/销毁对象（如子弹、特效）的终极方案。
+*   **问题代码**：
+    ```csharp
+    void Update() {
+        // ❌ 某些旧版编译器或特定情况下，每次 Update 可能会 new 一个 Action
+        Func<int> func = () => 1;
+    }
+    ```
 
-* **原理**：用完对象不销毁，而是“回收”到池子里，下次要用直接“取”出来。
+#### 5. LINQ 使用问题
+LINQ 虽然简洁，但由于其内部大量使用委托、闭包和迭代器，极易产生大量的垃圾对象。
 
-```csharp
-// 简单的对象池概念
-public class BulletPool {
-    private Queue<GameObject> pool = new Queue<GameObject>();
+*   **问题代码**：
+    ```csharp
+    void Update() {
+        // ❌ 极度危险：每帧产生大量中间对象
+        var item = list.Where(x => x.Active).OrderBy(x => x.Name).First();
+    }
+    ```
 
-    public GameObject Get() {
-        if (pool.Count > 0) {
-            GameObject obj = pool.Dequeue();
-            obj.SetActive(true);
-            return obj;
+#### 6. 协程中的内存问题
+`yield return new xxx` 会创建新的等待对象。
+
+*   **问题代码**：
+    ```csharp
+    IEnumerator Wait() {
+        while(true) {
+            // ❌ 每次循环都 new 一个新对象
+            yield return new WaitForSeconds(1f);
         }
-        return Instantiate(prefab); // 池里没了才创建新的
     }
+    ```
 
-    public void Return(GameObject obj) {
-        obj.SetActive(false);
-        pool.Enqueue(obj);
+#### 7. foreach 循环的潜在问题
+在旧版Mono编译器中，`foreach` 会导致枚举器的装箱。虽然新版Unity已修复，但在自定义集合或特定接口调用下仍需注意。
+
+### 3.2.2 问题解决办法
+
+#### 1. 对象池工厂模式 (Object Pooling)
+对于频繁创建和销毁的对象（如子弹、特效、UI条目），使用对象池进行复用。
+
+```csharp
+public class ObjectPool<T> where T : new() {
+    private Stack<T> _pool = new Stack<T>();
+    
+    public T Get() {
+        return _pool.Count > 0 ? _pool.Pop() : new T();
+    }
+    
+    public void Return(T item) {
+        _pool.Push(item);
     }
 }
 ```
 
-### 4.2.7 结构体数组 (Struct Arrays) 与 Native Collections
-
-对于极致性能需求，可以使用 Unity 的 `NativeArray` 等集合，它们分配在**原生堆**上，完全不受 GC 影响。
+#### 2. 对象实例复用
+对于集合类（List, Dictionary），避免频繁 `new`，而是使用 `Clear()`。
 
 ```csharp
-// 使用 NativeArray (需要引入 Unity.Collections)
+// ✅ 推荐：成员变量复用
+List<int> _tempList = new List<int>(128); // 预设容量
+
+void Update() {
+    _tempList.Clear(); // 0 Alloc
+    // Fill _tempList...
+}
+```
+
+#### 3. 泛型避免装箱
+使用泛型接口替代 `object` 参数。
+
+```csharp
+// ❌ 导致装箱
+public void Compare(object a, object b) { ... }
+
+// ✅ 避免装箱
+public void Compare<T>(T a, T b) where T : IEquatable<T> { ... }
+```
+
+#### 4. 字符串优化
+*   使用 `StringBuilder` 进行复杂拼接。
+*   对于特定格式（如分数），使用缓存数组或 `ZString` 等零分配库。
+*   使用 `string.IsNullOrEmpty` 代替 `str == ""`。
+
+```csharp
+// ✅ StringBuilder 复用
+StringBuilder _sb = new StringBuilder();
+void Update() {
+    _sb.Clear();
+    _sb.Append("Score: ").Append(score);
+    text.text = _sb.ToString(); // 只有 ToString 产生一次分配
+}
+```
+
+#### 5. 协程优化
+缓存 `WaitForSeconds` 对象。
+
+```csharp
+// ✅ 缓存等待对象
+WaitForSeconds _wait = new WaitForSeconds(1f);
+IEnumerator Wait() {
+    while(true) {
+        yield return _wait; // 0 Alloc
+    }
+}
+```
+
+#### 6. Native容器的应用
+使用 `Unity.Collections` 中的 Native 容器（如 `NativeArray`, `NativeList`）。
+*   **优点**：它们分配在**原生堆（Native Heap）**上，不参与GC扫描，彻底避免托管堆内存碎片。
+*   **注意**：必须手动 `Dispose` 释放，否则会内存泄漏。
+
+```csharp
+// 需要引入 Unity.Collections
 NativeArray<int> nums = new NativeArray<int>(100, Allocator.Temp);
-// ... 使用 nums ...
+// 使用 nums ...
 nums.Dispose(); // 必须手动释放！
 ```
-
----
-
-## 五、总结
-
-1. **关注高频调用**：`Update`, `FixedUpdate`, `LateUpdate` 中的代码是 GC 优化的重中之重。
-2. **善用工具**：使用 Unity Profiler 的 **GC Alloc** 列来查找每一帧产生的垃圾。
-3. **平衡**：不要为了 0 GC 而过度牺牲代码可读性，优先解决大头。
