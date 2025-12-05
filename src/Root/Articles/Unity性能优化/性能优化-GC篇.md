@@ -12,7 +12,7 @@ tags: [Unity, 性能优化, GC]
 
 理解C#中的数据类型是理解内存管理的基础。C#的数据类型主要分为两大类：**值类型**和**引用类型**。
 
-### 值类型 (Value Types)
+## 1.1 值类型 (Value Types)
 *   **定义**：变量直接包含其数据。
 *   **存储位置**：通常分配在**栈（Stack）**上（除非它是类的一个字段，此时随类存储在堆上）。
 *   **特点**：
@@ -21,7 +21,7 @@ tags: [Unity, 性能优化, GC]
     *   赋值时进行数据复制。
 *   **常见类型**：`int`, `float`, `bool`, `struct` (如 `Vector3`, `Quaternion`), `enum`。
 
-### 引用类型 (Reference Types)
+## 1.2 引用类型 (Reference Types)
 *   **定义**：变量存储的是指向数据的**内存地址（引用）**，实际数据存储在堆上。
 *   **存储位置**：实际对象分配在**托管堆（Managed Heap）**上，栈上只存储引用地址。
 *   **特点**：
@@ -44,6 +44,18 @@ graph TD
     style Stack fill:#f9f,stroke:#333,stroke-width:2px
     style Heap fill:#ccf,stroke:#333,stroke-width:2px
 ```
+
+## 1.3 结构体 vs 类 (Struct vs Class)
+
+*   **选择结构体 (struct) 当**：
+    1.  对象较小（小于 16 字节）。
+    2.  生命周期短。
+    3.  不需要继承。
+    4.  不需要频繁作为参数传递（避免值拷贝开销）。
+*   **选择类 (class) 当**：
+    1.  对象较大。
+    2.  需要继承或多态。
+    3.  需要在多处共享同一份数据。
 
 # 二、内存基础概念
 
@@ -68,7 +80,7 @@ graph TD
 *   **管理方式**：需要手动管理或由Unity引擎内部管理。通常通过 `Destroy` 或 `UnloadUnusedAssets` 释放。
 *   **GC关联**：GC不直接管理此区域，但C#层的封装对象（如 `Texture2D` 对象本身）在托管堆，如果C#对象被回收，可能会触发底层资源的引用计数减少。
 
-## 2.2 核心内存问题
+## 2.2 核心内存问题：内存碎片
 
 ### 什么是内存碎片？
 
@@ -84,20 +96,20 @@ graph TD
 
 **后果**：
 1.  **触发GC**：系统会尝试通过GC清理内存来腾出空间。
-2.  **堆扩张**：如果GC后仍然不够，Unity会向操作系统申请更多内存，导致应用内存占用变大。
+2.  **堆扩张**：如果GC后仍然不够，Unity会向操作系统申请更多内存，导致应用内存占用变大，容易被系统杀后台（OOM）。
 3.  **分配失败**：极端情况下导致Crash。
 
 # 三、GC核心认知
 
-## 2.1 什么是GC
+## 3.1 什么是GC
 
 GC（Garbage Collection）是自动化内存管理机制。它的核心职责是：
-1.  **查找**：遍历内存中的对象，找出那些不再被引用的“垃圾”对象。
-2.  **回收**：释放这些垃圾对象占用的内存，使其可以被再次利用。
+1.  **根搜索 (Mark)**：从“根”对象（静态变量、栈上的局部变量等）开始遍历，标记所有可达对象。
+2.  **清除 (Sweep)**：扫描整个堆，回收那些未被标记（不可达）的对象占用的内存。
 
-Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental GC** (增量式，新版)。
+Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认，非分代，非压缩) 和 **Incremental GC** (增量式，新版)。
 
-## 2.2 GC的性能影响
+## 3.2 GC的性能影响
 
 ### GC为什么会导致较大的性能开销？
 
@@ -106,7 +118,7 @@ Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental G
     *   如果GC耗时 50ms，那么游戏画面就会卡住 50ms，玩家会感觉到明显的掉帧。
 
 2.  **遍历开销**：
-    GC需要遍历托管堆上的**所有活动对象**来标记引用关系。堆上对象越多，标记过程越慢。
+    GC需要遍历托管堆上的**所有活动对象**来标记引用关系。堆上对象越多，标记过程越慢。这意味着即使你的“垃圾”很少，只要活着的对象很多，GC依然会慢。
 
 3.  **内存整理（碎片化）**：
     标准的 Boehm GC **不会**进行内存压缩（Compacting），这意味着它只标记空闲内存，不移动对象。这也是导致内存碎片的主要原因。
@@ -115,7 +127,7 @@ Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental G
 
 优化的核心目标：**减少堆内存分配（Alloc），从而减少GC触发频率和单次GC的耗时。**
 
-## 3.1 编辑器配置优化
+## 4.1 编辑器配置优化
 
 ### 启用增量GC (Incremental GC)
 
@@ -129,9 +141,9 @@ Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental G
 
 *   **注意**：增量GC并不会减少总的GC开销，甚至可能因为写屏障（Write Barrier）稍微增加一点总开销，但它能极大地**平滑帧率**，消除峰值卡顿。
 
-## 3.2 代码层面优化：避免频繁创建引用类型
+## 4.2 代码层面优化：避免频繁创建引用类型
 
-### 3.2.1 常见高频问题场景
+### 4.2.1 常见高频问题场景
 
 #### 1. String 相关问题
 `string` 是不可变的引用类型。任何对字符串的拼接、修改操作都会创建新的字符串对象。
@@ -158,7 +170,7 @@ Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental G
     ```
 
 #### 3. 装箱操作 (Boxing)
-将值类型赋值给引用类型（如 `object` 或接口）时，需要将值类型包装成堆上的对象。
+将值类型赋值给引用类型（如 `object` 或接口）时，需要将值类型包装成堆上的对象。这是非常隐蔽的GC来源。
 
 *   **问题代码**：
     ```csharp
@@ -171,6 +183,8 @@ Unity主要使用 **Boehm-Demers-Weiser GC** (旧版/默认) 和 **Incremental G
         
         // ❌ string.Format 的参数也是 object，导致装箱
         Debug.Log(string.Format("Health: {0}", health));
+        
+        // ❌ 字典的 key 是 struct 但没有实现 IEquatable<T>，也可能导致装箱
     }
     ```
 
@@ -210,9 +224,9 @@ LINQ 虽然简洁，但由于其内部大量使用委托、闭包和迭代器，
     ```
 
 #### 7. foreach 循环的潜在问题
-在旧版Mono编译器中，`foreach` 会导致枚举器的装箱。虽然新版Unity已修复，但在自定义集合或特定接口调用下仍需注意。
+在旧版Mono编译器（Unity 5.5以前）中，`foreach` 会导致枚举器的装箱。虽然新版Unity已修复，但在自定义集合或特定接口调用下仍需注意。如果你将 List 转换为 IEnumerable 进行 foreach，仍然会产生装箱。
 
-### 3.2.2 问题解决办法
+### 4.2.2 问题解决办法
 
 #### 1. 对象池工厂模式 (Object Pooling)
 对于频繁创建和销毁的对象（如子弹、特效、UI条目），使用对象池进行复用。
@@ -236,7 +250,7 @@ public class ObjectPool<T> where T : new() {
 
 ```csharp
 // ✅ 推荐：成员变量复用
-List<int> _tempList = new List<int>(128); // 预设容量
+private List<int> _tempList = new List<int>(128); // 预设容量
 
 void Update() {
     _tempList.Clear(); // 0 Alloc
@@ -259,10 +273,11 @@ public void Compare<T>(T a, T b) where T : IEquatable<T> { ... }
 *   使用 `StringBuilder` 进行复杂拼接。
 *   对于特定格式（如分数），使用缓存数组或 `ZString` 等零分配库。
 *   使用 `string.IsNullOrEmpty` 代替 `str == ""`。
+*   **字符串驻留**：对于固定的字符串，直接使用字面量。
 
 ```csharp
 // ✅ StringBuilder 复用
-StringBuilder _sb = new StringBuilder();
+private StringBuilder _sb = new StringBuilder();
 void Update() {
     _sb.Clear();
     _sb.Append("Score: ").Append(score);
@@ -275,7 +290,7 @@ void Update() {
 
 ```csharp
 // ✅ 缓存等待对象
-WaitForSeconds _wait = new WaitForSeconds(1f);
+private WaitForSeconds _wait = new WaitForSeconds(1f);
 IEnumerator Wait() {
     while(true) {
         yield return _wait; // 0 Alloc
@@ -294,3 +309,10 @@ NativeArray<int> nums = new NativeArray<int>(100, Allocator.Temp);
 // 使用 nums ...
 nums.Dispose(); // 必须手动释放！
 ```
+
+#### 7. 主动触发 GC (Advanced)
+在某些场景下（如加载过场、黑屏期间），我们可以**主动调用** `System.GC.Collect()`。这虽然会卡顿，但发生在玩家无感知的时刻，可以避免在战斗激烈时触发GC。
+
+```csharp
+// 在关卡加载完毕，淡入画面之前
+System.GC.Collect();
