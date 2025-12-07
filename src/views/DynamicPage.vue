@@ -97,6 +97,27 @@
         </TransitionGroup>
       </div>
 
+      <!-- Iframe 视图 -->
+      <div v-else-if="currentConfig?.type === 'iframe'" class="w-full h-full flex flex-col" key="iframe">
+        <div class="mb-4 border-b-4 border-pixel-dark pb-4 flex justify-between items-end">
+          <div>
+            <h2 class="text-3xl font-pixel text-pixel-primary mb-2">{{ currentConfig.title }}</h2>
+            <p class="text-gray-600">{{ currentConfig.description }}</p>
+          </div>
+          <a :href="currentConfig.link" target="_blank" class="text-xs text-gray-500 hover:text-pixel-primary transition-colors flex items-center gap-1">
+            <span>在新窗口打开</span>
+            <span>↗</span>
+          </a>
+        </div>
+        <div class="w-full h-[75vh] pixel-border bg-white p-1 overflow-hidden relative">
+             <iframe 
+               :src="currentConfig.link" 
+               class="w-full h-full border-0"
+               allowfullscreen
+             ></iframe>
+        </div>
+      </div>
+
       <!-- 文章详情/单页视图 -->
       <div v-else class="max-w-3xl mx-auto relative" :key="selectedArticle?.path || 'detail'">
         <!-- 首页 Hero 区域 -->
